@@ -1,5 +1,8 @@
 myvenv/
 
+# for dev only
+migrations/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
