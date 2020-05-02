@@ -3,7 +3,7 @@ from django.db import models
 import json
 
 class Salle(models.Model):
-    nom = models.CharField("Nom de la salle", max_length=256)
+    id = models.CharField("Nom de la salle", max_length=256, primary_key=True, default="")
     # mots = models.TextField("Tous les mots du jeu", default={})  # json dump dict
     # tour_mots = models.TextField("Les mots pour le tour en cours", default={})  # json dump dict
     #
@@ -35,7 +35,7 @@ class  Mot(models.Model):
     mot = models.CharField("Mot", max_length=256)
     salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Mot is one-to-many.
 
-    libre = models.BooleanField("Est libre?", default=True)
+    libre = models.BooleanField("Est-ce que le mot est libre?", default=True)
 
     passed = models.BooleanField("Est passed?", default=False)
     guessed = models.BooleanField("Est passed?", default=False)
