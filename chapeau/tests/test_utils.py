@@ -37,5 +37,8 @@ class RoundUtilsTest(TestCase):
         results = utils.GetFreeWordsList(salle_id='pumpkin')
         self.assertCountEqual(results, ['whale', 'pig'])
 
+    def test_GetRandomWord(self):
+        result = utils.ChooseRandomFreeWord('pumpkin')
+        self.assertIn(result, ['whale', 'pig'])
        
 
