@@ -47,3 +47,5 @@ class Jouer(models.Model):
     salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Jouer is one-to-many.
     hatter = models.BooleanField("Etat de  le jouer", default=False)
     score = models.IntegerField(default=0)
+
+    order_index = models.IntegerField(default=0)

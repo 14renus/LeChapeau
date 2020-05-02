@@ -33,14 +33,14 @@ def _GetFreeWords(salle_id):
 
 # return: [str list]
 def GetFreeWordsList(salle_id):
-    libre_mots_query = salle_id._GetFreeWords()
+    libre_mots_query = _GetFreeWords(salle_id)
     if not libre_mots_query.exists():
         return None
     return [x.mot for x in libre_mots_query]
 
 # return: None if there are no more free words
 def ChooseRandomFreeWord(salle_id):
-    libre_mots = salle_id._GetFreeWords()
+    libre_mots = _GetFreeWords(salle_id)
 
     if(len(libre_mots) == 0):
         return None
