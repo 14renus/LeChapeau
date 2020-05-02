@@ -3,7 +3,12 @@
 <body>
     <p>Vous êtes hatter!</p>
     <p>Ici il y aura un mot pour déviner!</p>
+    {% if word %}
     <p> Mot: {{ word }} </p>
+    {% endif %}
+    {% if error %}
+    <p> {{ error }}
+    {% endif %}
     <form action="" method="post">{% csrf_token %}
         <input type="submit" name = "skip_word" value="Skip">
         <input type="submit" name = "next_word" value="Got it!">

@@ -24,6 +24,7 @@ def AddPlayerView(request, room_id):
             words = form.cleaned_data['words']
             player_id = form.cleaned_data['player_id']
             AddWordList(room_id, words.split(','))
+            # TODO: add an exception and throw a readable error if a player already exists.
             AddPlayer(room_id, player_id)
             return redirect('start_game', room_id=room_id, player_id=player_id)
     form = PlayerForm()
@@ -33,7 +34,8 @@ def StartGameView(request, room_id, player_id):
     if request.method == "POST":
         form = StartGameForm(request.POST)
         if form.is_valid():
-            if IsHatter(player_id):
+            ChooseHatter(room_id)
+            if IsHatter(room_id, player_id):
                 return redirect('hatter_preview', room_id=room_id, player_id=player_id)
             else:
                 return redirect('guesser', room_id=room_id, player_id=player_id)
@@ -43,11 +45,7 @@ def StartGameView(request, room_id, player_id):
 def GuesserPreview(request, room_id, player_id):
     if request.method == "POST":
         if 'next_turn' in request.POST:
-            ChooseHatter(room_id)
-            if IsHatter(player_id):
-                return redirect('hatter_preview', room_id=room_id, player_id=player_id)
-            else:
-                return redirect('guesser', room_id=room_id, player_id=player_id)
+            return redirect('round_results', room_id=room_id, player_id=player_id)
         if 'game_over' in request.POST:
             return redirect('game_over', room_id=room_id, player_id=player_id)
     return render(request, 'guesser.html', {})
@@ -63,28 +61,34 @@ def HatterView(request, room_id, player_id):
         if 'next_word' in request.POST:
             return redirect('hatter_round', room_id=room_id, player_id=player_id)
         if 'skip_word' in request.POST:
-            PassWord(room_id, request.POST['word'])
+            word = request.POST['word']
+            if word != "None":
+                PassWord(room_id, request.POST['word'])
             return redirect('hatter_round', room_id=room_id, player_id=player_id)
         if 'next_turn' in request.POST:
             return redirect('round_results', room_id=room_id, player_id=player_id)
         if 'game_over' in request.POST:
             return redirect('game_over', room_id=room_id, player_id=player_id)
     word = ChooseRandomFreeWord(room_id)
-    return render(request, 'hatter_round.html', {"word" : word})
+    error = None
+    if not word:
+        error = "Il n'y a plus de mots :("
+    return render(request, 'hatter_round.html', {"word": word, "error": error})
 
 def RoundResultsView(request, room_id, player_id):
     if request.method == "POST":
         if 'next_turn' in request.POST:
-            ClearRound(room_id)
+            FlushRound(room_id)
             ChooseHatter(room_id)
-            if IsHatter(player_id):
+            if IsHatter(room_id, player_id):
                 return redirect('hatter_round', room_id=room_id, player_id=player_id)
             else:
                 return redirect('guesser', room_id=room_id, player_id=player_id)
         if 'game_over' in request.POST:
             return redirect('game_over', room_id=room_id, player_id=player_id)
     # TODO: display the words from the finished round in the template
-    return render(request, 'round_results.html', {})
+    round_words = GetWordsInRound(room_id)
+    return render(request, 'round_results.html', {"words": round_words})
 
 
 def EndGameView(request, room_id, player_id):

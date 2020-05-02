@@ -44,8 +44,8 @@ def ChooseHatter(salle_id):
 # Actions to be performed within one round of the game.
 ##################################################
 
-def IsHatter(player_id):
-    return Jouer.objects.get(nom=player_id).hatter
+def IsHatter(salle_id, player_id):
+    return Jouer.objects.get(salle=Salle(id=salle_id), nom=player_id).hatter
 
 # return: liste de mots
 def _GetFreeWords(salle_id):

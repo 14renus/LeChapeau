@@ -32,7 +32,7 @@ class Salle(models.Model):
     #         self.data = json.dumps(mots_dict)
 
 class  Mot(models.Model):
-    mot = models.CharField("Mot", max_length=256, default="", primary_key=True)
+    mot = models.CharField("Mot", max_length=256, default="")
     salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Mot is one-to-many.
     libre = models.BooleanField("Est-ce que le mot est libre?", default=True)
 
@@ -40,6 +40,10 @@ class  Mot(models.Model):
     # si un mot est dans un tour, le mot peut etre passé (passe=True) ou deviné (passe=False))
     passe = models.BooleanField("Est-ce que le mot est passé?", default=False)
     tour = models.BooleanField("Currently in tour", default=False)
+
+    # unique contraint
+    class Meta:
+        unique_together = (('mot', 'salle'))
 
 
 class Jouer(models.Model):
