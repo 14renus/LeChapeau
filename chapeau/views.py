@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
 from .forms import RoomForm, PlayerForm
-from .utils import AddWordList
+from .utils import AddWordList, AddPlayer
 
 # Create your views here.
-def CreateRoom(request):
+def CreateRoomView(request):
     # If the form was submitted
     if request.method == "POST":
         form = RoomForm(request.POST)
@@ -17,23 +17,21 @@ def CreateRoom(request):
     form = RoomForm()
     return render(request, 'startup.html', {"form": form})
 
-def AddPlayer(request, room_id):
+def AddPlayerView(request, room_id):
     if request.method == "POST":
         form = PlayerForm(request.POST)
         if form.is_valid():
             words = form.cleaned_data['words']
             player_id = form.cleaned_data['player_id']
-            AddWordList(words)
+            AddWordList(room_id, words.split(','))
             AddPlayer(room_id, player_id)
             return redirect('start_game', room_id=room_id, player_id=player_id)
+    form = PlayerForm()
+    return render(request, 'add_players.html', {"form" : form})
 
-
-
-
-
-
-
-    return render(request, 'add_players.html', {})
+def StartGameView(request, room_id, player_id):
+    # Choose Hatter
+    return render(request, 'start_game.html', {})
 
 def GuesserView(request, room_id, jouer_id, hatter_id):
     return render(request, 'guesser_view.html', {})

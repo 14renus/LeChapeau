@@ -32,7 +32,7 @@ class Salle(models.Model):
     #         self.data = json.dumps(mots_dict)
 
 class  Mot(models.Model):
-    mot = models.CharField("Mot", max_length=256)
+    mot = models.CharField("Mot", max_length=256, default="", primary_key=True)
     salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Mot is one-to-many.
     libre = models.BooleanField("Est-ce que le mot est libre?", default=True)
 
