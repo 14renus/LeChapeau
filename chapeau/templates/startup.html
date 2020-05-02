@@ -1,5 +1,13 @@
+{% load static %}
 <html>
 <body>
     <p>Create your room!</p>
+    <form method="POST" class="post-form">{% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="save btn btn-default">Save</button>
+    </form>
+    {% if salle_already_exists %}
+    <p> La salle avec ce nom déjâ existe. Choisi un autre nom, s'il te plaît! </p>
+    {% endif %}
 </body>
 </html>
