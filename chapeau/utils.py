@@ -24,8 +24,13 @@ def AddPlayer(salle_id, player_id):
 
 # Choose hatter and assigned ordered indices
 # Currently, hatter and order chosen at random
+# return chosen hatter or None
 def ChooseHatter(salle_id):
     player_set = GetPlayers(salle_id)
+    if not player_set.exists():
+        print("No players in game.")
+        return
+
     index = 0
     for player in player_set:
         player.order_index = index
@@ -33,6 +38,7 @@ def ChooseHatter(salle_id):
             player.hatter=True
         player.save()
         index+=1
+    return player_set[0]
 
 #################################################
 # Actions to be performed within one round of the game.
@@ -132,17 +138,19 @@ def UpdateHatter(salle_id):
     if not player_set.exists():
         print("No players")
 
-    old_hatter = player_set.filter(hatter=True)
-    if old_hatter.exists() and old_hatter[0].order_index is not None:
+    old_hatter_set = player_set.filter(hatter=True)
+    if old_hatter_set.exists() and old_hatter_set[0].order_index is not None:
+      old_hatter = old_hatter_set[0]
+      old_index = list(player_set).index(old_hatter)
+
       # Clear old hatter
-      old_hatter[0].hatter=False
-      old_hatter[0].save()
+      old_hatter.hatter=False
+      old_hatter.save()
 
       # Set new hatter
-      old_index = (*player_set,).index(old_hatter)
       new_index = (old_index+1)%len(player_set)
       player_set[new_index].hatter=True
-      player_set[new_index].hatter.save()
+      player_set[new_index].save()
 
     else:
         print("No order/hatter. Assigning new player order and hatter.")
