@@ -32,7 +32,7 @@ class Salle(models.Model):
     #         self.data = json.dumps(mots_dict)
 
 class  Mot(models.Model):
-    mot = models.CharField("Mot", max_length=256)
+    mot = models.CharField("Mot", max_length=256, default="", primary_key=True)
     salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Mot is one-to-many.
     libre = models.BooleanField("Est-ce que le mot est libre?", default=True)
 
@@ -43,7 +43,7 @@ class  Mot(models.Model):
 
 
 class Jouer(models.Model):
-    nom = models.CharField("Nom de le jouer", max_length=256, primary_key=True)
+    nom = models.CharField("Nom de le jouer", max_length=256, default="", primary_key=True)
     salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Jouer is one-to-many.
     hatter = models.BooleanField("Etat de  le jouer", default=False)
     score = models.IntegerField(default=0)

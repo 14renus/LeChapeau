@@ -9,5 +9,5 @@ class RoomForm(forms.ModelForm):
         fields = ('id',)
 
 class PlayerForm(forms.Form):
-    words = forms.TextInput()
+    words = forms.CharField()
     player_id = forms.CharField(max_length=256)
