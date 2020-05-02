@@ -88,25 +88,42 @@ class RoundUtilsTest(TestCase):
     def test_FlushRound(self):
         pass
 
+    # TODO: check order is set correctly
     def test_ChooseHatter(self):
-        utils.ChooseHatter(salle_id='pumpkin')
+        chosen_hatter = utils.ChooseHatter(salle_id='pumpkin')
 
         player_set = Jouer.objects.filter(salle=Salle(id='pumpkin'))
 
-        found_hatter=False
+        found_hatter=None
         for player in player_set:
             self.assertFalse(player.order_index is None, "Order index should be set.")
             if player.hatter:
                 if not found_hatter:
-                    found_hatter=True
+                    found_hatter=player.nom
                 else:
                     self.fail("Failed. Hatter is not unique.")
-        self.assertTrue(found_hatter)
+        self.assertTrue(found_hatter is not None)
+        self.assertTrue(found_hatter == chosen_hatter.nom)
 
     def test_UpdateHatter(self):
-        utils.ChooseHatter(salle_id='pumpkin')
         player_set = Jouer.objects.filter(salle=Salle(id='pumpkin'))
-        pass
+        # set dummy index and hatter
+        index=0
+        for player in player_set:
+            player.order_index = index
+            if index==1:
+                player.hatter=True
+            index+=1
+            player.save()
+
+        utils.UpdateHatter(salle_id='pumpkin')
+
+        ordered_player_set = Jouer.objects.filter(salle=Salle(id='pumpkin')).order_by("order_index")
+        self.assertTrue(ordered_player_set[2].hatter)
+
+
+
+
 
 
 
