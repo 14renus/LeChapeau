@@ -129,6 +129,14 @@ def FlushRound(salle_id):
 # Actions to be performed between rounds of the game.
 ##################################################
 
+# return: dict [player: str, score: int]
+def GetScoreboard(salle_id):
+    player_set = GetOrderedPlayers(salle_id)
+    scoreboard = {}
+    for player in player_set:
+        scoreboard[player.nom] = player.score
+    return scoreboard
+
 # return: QuerySet
 def GetOrderedPlayers(salle_id):
     return Jouer.objects.filter(salle=Salle(id=salle_id)).order_by('order_index')
