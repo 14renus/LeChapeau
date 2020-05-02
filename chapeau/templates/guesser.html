@@ -1,0 +1,10 @@
+{% load static %}
+<html>
+<body>
+    <p>Vous êtes devineur!</p>
+    <form action="" method="post">{% csrf_token %}
+        <input type="submit" name = "next_turn" value="NextTurn">
+        <input type="submit" name = "game_over" value="GameOver">
+    </form>
+</body>
+</html>
