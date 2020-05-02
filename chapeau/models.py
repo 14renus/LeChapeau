@@ -34,11 +34,11 @@ class Salle(models.Model):
 class  Mot(models.Model):
     mot = models.CharField("Mot", max_length=256)
     salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Mot is one-to-many.
-
     libre = models.BooleanField("Est-ce que le mot est libre?", default=True)
 
-    passed = models.BooleanField("Est passed?", default=False)
-    guessed = models.BooleanField("Est passed?", default=False)
+    # specifique a un tour
+    # si un mot est dans un tour, le mot peut etre passé (passe=True) ou deviné (passe=False))
+    passe = models.BooleanField("Est-ce que le mot est passé?", default=False)
     tour = models.BooleanField("Currently in tour", default=False)
 
 
