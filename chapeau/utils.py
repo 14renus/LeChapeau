@@ -14,7 +14,14 @@ def AddWordList(salle_id, word_list):
     for mot in word_list:
         Mot.objects.get_or_create(mot=mot, salle=Salle(id=salle_id))
 
+def AddPlayer(salle_id, player_id):
+    player = Jouer(nom=player_id, salle=GetRoomById(salle_id))
+    player.save()
 
+def ChooseHatter(salle_id):
+    # Add all players to the ordered list
+    # Choose hatter
+    pass
 
 #################################################
 # Actions to be performed in one round of the game.

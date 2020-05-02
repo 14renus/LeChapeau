@@ -1,27 +1,42 @@
 from django.shortcuts import render, redirect
-from .forms import SalleForm
-from .models import Salle
+from .forms import RoomForm, PlayerForm
+from .utils import AddWordList
 
 # Create your views here.
-def CreerSalle(request):
+def CreateRoom(request):
     # If the form was submitted
     if request.method == "POST":
-        form = SalleForm(request.POST)
+        form = RoomForm(request.POST)
         if form.is_valid():
-            salle = form.save()
-            return redirect('ajoute_jouers', salle_id=salle.id)
+            room = form.save()
+            return redirect('add_players', room_id=room.id)
         else:
-            # Salle with this name already exists, redirect to the initial page
-            return render(request, 'startup.html', {"form": form, "form_errors": form.errors})
+            # room with this name already exists, redirect to the initial page
+            return render(request, 'startup.html', {"form": form})
     # If the form was not submitted yet
-    form = SalleForm()
+    form = RoomForm()
     return render(request, 'startup.html', {"form": form})
 
-def AjouteJoeurs(request, salle_id):
-    return render(request, 'ajoute_jouers.html', {})
+def AddPlayer(request, room_id):
+    if request.method == "POST":
+        form = PlayerForm(request.POST)
+        if form.is_valid():
+            words = form.cleaned_data['words']
+            player_id = form.cleaned_data['player_id']
+            AddWordList(words)
+            AddPlayer(room_id, player_id)
+            return redirect('start_game', room_id=room_id, player_id=player_id)
 
-def DevineurVue(request, salle_id, jouer_id, hatter_id):
-    return render(request, 'devineur_vue.html', {})
 
-def HatterVue(request, salle_id, jouer_id, hatter_id):
-    return render(request, 'hatter_vue.html', {})
+
+
+
+
+
+    return render(request, 'add_players.html', {})
+
+def GuesserView(request, room_id, jouer_id, hatter_id):
+    return render(request, 'guesser_view.html', {})
+
+def HatterView(request, room_id, jouer_id, hatter_id):
+    return render(request, 'hatter_view.html', {})

@@ -43,7 +43,7 @@ class  Mot(models.Model):
 
 
 class Jouer(models.Model):
-    nom = models.CharField("Nom de le jouer", max_length=256)
+    nom = models.CharField("Nom de le jouer", max_length=256, primary_key=True)
     salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Jouer is one-to-many.
     hatter = models.BooleanField("Etat de  le jouer", default=False)
     score = models.IntegerField(default=0)
