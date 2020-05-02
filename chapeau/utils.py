@@ -4,56 +4,95 @@ from .models import Jouer
 
 import random
 
-# Handles Mots avec un salle_id!
-class MotsHandler(object):
-    salle_id=""
+##########################
+# Actions to start a game
+#########################
+def GetRoomById(salle_id):
+    return Salle.objects.get(id=salle_id)
 
-    def __init__(self, salle_id):
-        self.salle_id=salle_id
+def AddWordList(salle_id, word_list):
+    for mot in word_list:
+        Mot.objects.get_or_create(mot=mot, salle=Salle(id=salle_id))
 
 
-    def AjouteMotListe(self, mot_liste):
-        for mot in mot_liste:
-            Mot.objects.get_or_create(mot=mot, salle=Salle(id=self.salle_id))
 
-    # return: liste de mots
-    def _ObtientLibreMots(self):
-        return Mot.objects.filter(salle=Salle(id=self.salle_id), libre=True, tour=False)
+#################################################
+# Actions to be performed in one round of the game.
+##################################################
 
-    def ObtientLibreMotsList(self):
-        libre_mots_query = self._ObtientLibreMots()
-        if not libre_mots_query.exists():
-            return None
-        return [x.mot for x in libre_mots_query]
+# return: liste de mots
+def _GetFreeWords(salle_id):
+    return Mot.objects.filter(salle=Salle(id=salle_id), libre=True, tour=False)
 
-    # return: None si il n'y a pas plus de mots.
-    def ChoisiMot(self):
-        libre_mots = self._ObtientLibreMots()
+# return: [str list]
+def GetFreeWordsList(salle_id):
+    libre_mots_query = salle_id._GetFreeWords()
+    if not libre_mots_query.exists():
+        return None
+    return [x.mot for x in libre_mots_query]
 
-        if(len(libre_mots) == 0):
-            return None
+# return: None if there are no more free words
+def ChooseRandomFreeWord(salle_id):
+    libre_mots = salle_id._GetFreeWords()
 
-        choix = libre_mots[random.randint(0, len(libre_mots)-1)]
+    if(len(libre_mots) == 0):
+        return None
 
-        # tour = true
-        choix.tour=True
-        choix.save()
+    choix = libre_mots[random.randint(0, len(libre_mots)-1)]
 
-        return choix.mot
+    # tour = true
+    choix.tour=True
+    choix.save()
 
-    def PasseMot(self, mot):
-        mot = Mot.objects.get(salle=Salle(id=self.salle_id), mot=mot)
-        mot.passe = True
-        mot.save()
+    return choix.mot
 
-    # return: list of dicts [{mot: str, devine: bool}]
-    def ObtientMotsDuTour(self):
-        return Mot.objects.filter(salle=Salle(id=self.salle_id), tour=True).values
+def PassWord(salle_id, mot):
+    mot = Mot.objects.get(salle=Salle(id=salle_id), mot=mot)
+    mot.passe = True
+    mot.save()
 
-    def EffaceTour(self):
-        mots_du_tour = Mot.objects.filter(salle=Salle(id=self.salle_id), tour=True)
-        mots_du_tour.filter(passe=False).update(libre=True)
-        mots_du_tour.update(tour=False, passe=False)
+# return: list of dicts [{mot: str, passe: bool}]
+def GetWordsInRound(salle_id):
+    return Mot.objects.filter(salle=Salle(id=salle_id), tour=True).values
+
+# return: [str list]
+def GetGuessersInRound(salle_id):
+    return [jouer.nom for jouer in Jouer.objects.filter(salle=Salle(id=salle_id), hatter=False)]
+
+# param: list of dicts [{mot: str, passe: bool, player: str}]
+def FixWordsInRound(salle_id, mot_dict_list):
+    for mot_dict in mot_dict_list:
+        if 'mot' not in mot_dict_list:
+            continue
+        # update passe
+        mot_obj = Mot.objects.get(salle=Salle(id=salle_id), mot=mot_dict['mot'])
+        if mot_obj.exists() and 'passe' in mot_dict:
+            mot_obj.passe = mot_dict['passe']
+            mot_obj.save()
+
+# param: list of dicts [{mot: str, passe: bool, player: str}]
+def UpdateScoreboard(salle_id, mot_dict_list):
+    hatter = Jouer.objects.filter(salle=Salle(id=salle_id), hatter=True)
+    if not hatter.exists():
+        print("Hatter does not exist for game room ", salle_id)
+    for mot_dict in mot_dict_list:
+        if 'mot' not in mot_dict_list:
+            continue
+        # update Player and Hatter scores
+        if 'passe' in mot_dict and mot_dict['passe']!=True:
+            hatter.score += 1
+            hatter.save()
+            if 'player' in mot_dict:
+                player = Jouer.objects.get(salle=Salle(id=salle_id), nom=mot_dict['player'])
+                if player.exists():
+                    player.score+=1
+                    player.save()
+
+
+def ClearRound(salle_id):
+    mots_du_tour = Mot.objects.filter(salle=Salle(id=salle_id), tour=True)
+    mots_du_tour.filter(passe=False).update(libre=True)
+    mots_du_tour.update(tour=False, passe=False)
 
 
 
