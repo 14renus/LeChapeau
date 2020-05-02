@@ -12,7 +12,7 @@ def create_room(request, already_exists=False):
             salle_id = form.cleaned_data['id']
             print ('salle_id', salle_id)
             # Salle with this name already exists, redirect to the initial page
-            if Salle.objects.filter(id = salle_id).exists():
+            if Salle.objects.filter(id = salle_id).count():
                 print ('already exists!')
                 return redirect('create_room', already_exists=True)
             salle = form.save()
@@ -24,4 +24,8 @@ def create_room(request, already_exists=False):
 def add_players(request, salle_id):
     return render(request, 'add_players.html', {})
 
+def guesser_view(request, salle_id, jouer_id, hatter_id):
+    return render(request, 'guesser_view.html', {})
 
+def hatter_view(request, salle_id, jouer_id, hatter_id):
+    return render(request, 'guesser_view.html', {})
