@@ -3,25 +3,27 @@ from .forms import SalleForm
 from .models import Salle
 
 # Create your views here.
-def create_room(request, already_exists=False):
+def create_room(request):
     print ("welcome")
     # If the form was submitted
     if request.method == "POST":
         form = SalleForm(request.POST)
         if form.is_valid():
-            salle_id = form.cleaned_data['id']
-            print ('salle_id', salle_id)
-            # Salle with this name already exists, redirect to the initial page
-            if Salle.objects.filter(id = salle_id).exists():
-                print ('already exists!')
-                return redirect('create_room', already_exists=True)
             salle = form.save()
-            return redirect('add_players', salle_id = salle.id)
+            return redirect('add_players', salle_id=salle.id)
+        else:
+            # Salle with this name already exists, redirect to the initial page
+            print ('already exists!')
+            return render(request, 'startup.html', {"form" : form, "form_errors" : form.errors})
     # If the form was not submitted yet
     form = SalleForm()
-    return render(request, 'startup.html', {"form" : form, "salle_already_exists" : already_exists})
+    return render(request, 'startup.html', {"form" : form})
 
 def add_players(request, salle_id):
     return render(request, 'add_players.html', {})
 
+def guesser_view(request, salle_id, jouer_id, hatter_id):
+    return render(request, 'guesser_view.html', {})
 
+def hatter_view(request, salle_id, jouer_id, hatter_id):
+    return render(request, 'guesser_view.html', {})
