@@ -28,7 +28,7 @@ def ChooseHatter(salle_id):
     player_set = GetPlayers(salle_id)
     index = 0
     for player in player_set:
-        player.ordered_index = index
+        player.order_index = index
         if index==0:
             player.hatter=True
         player.save()
@@ -108,9 +108,11 @@ def UpdateScoreboard(salle_id, mot_dict_list):
                     player.save()
 
 
-def ClearRound(salle_id):
+def FlushRound(salle_id):
     mots_du_tour = Mot.objects.filter(salle=Salle(id=salle_id), tour=True)
-    mots_du_tour.filter(passe=False).update(libre=True)
+    # set all guessed words to not free.
+    mots_du_tour.filter(passe=False).update(libre=False)
+    # clear all attributes for round
     mots_du_tour.update(tour=False, passe=False)
 
 
@@ -128,7 +130,7 @@ def UpdateHatter(salle_id):
         print("No players")
 
     old_hatter = player_set.filter(hatter=True)
-    if old_hatter.exists():
+    if old_hatter.exists() and old_hatter[0].order_index is not None:
       # Clear old hatter
       old_hatter[0].hatter=False
       old_hatter[0].save()
@@ -140,5 +142,5 @@ def UpdateHatter(salle_id):
       player_set[new_index].hatter.save()
 
     else:
-        print("No hatter. Assigning new player order and hatter.")
+        print("No order/hatter. Assigning new player order and hatter.")
         ChooseHatter(salle_id)
