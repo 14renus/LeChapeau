@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
-from .forms import RoomForm, PlayerForm
-from .utils import AddWordList, AddPlayer
+from .forms import RoomForm, PlayerForm, StartGameForm
+from .utils import *
 
 # Create your views here.
 def CreateRoomView(request):
@@ -30,11 +30,64 @@ def AddPlayerView(request, room_id):
     return render(request, 'add_players.html', {"form" : form})
 
 def StartGameView(request, room_id, player_id):
-    # Choose Hatter
+    if request.method == "POST":
+        form = StartGameForm(request.POST)
+        if form.is_valid():
+            if IsHatter(player_id):
+                return redirect('hatter_preview', room_id=room_id, player_id=player_id)
+            else:
+                return redirect('guesser', room_id=room_id, player_id=player_id)
+    # Assign order, choose Hatter
     return render(request, 'start_game.html', {})
 
-def GuesserView(request, room_id, jouer_id, hatter_id):
-    return render(request, 'guesser_view.html', {})
+def GuesserPreview(request, room_id, player_id):
+    if request.method == "POST":
+        if 'next_turn' in request.POST:
+            ChooseHatter(room_id)
+            if IsHatter(player_id):
+                return redirect('hatter_preview', room_id=room_id, player_id=player_id)
+            else:
+                return redirect('guesser', room_id=room_id, player_id=player_id)
+        if 'game_over' in request.POST:
+            return redirect('game_over', room_id=room_id, player_id=player_id)
+    return render(request, 'guesser.html', {})
 
-def HatterView(request, room_id, jouer_id, hatter_id):
-    return render(request, 'hatter_view.html', {})
+def HatterPreview(request, room_id, player_id):
+    if request.method == "POST":
+        if 'ready' in request.POST:
+            return redirect('hatter_round', room_id=room_id, player_id=player_id)
+    return render(request, 'hatter_preview.html', {})
+
+def HatterView(request, room_id, player_id):
+    if request.method == "POST":
+        if 'next_word' in request.POST:
+            return redirect('hatter_round', room_id=room_id, player_id=player_id)
+        if 'skip_word' in request.POST:
+            PassWord(room_id, request.POST['word'])
+            return redirect('hatter_round', room_id=room_id, player_id=player_id)
+        if 'next_turn' in request.POST:
+            return redirect('round_results', room_id=room_id, player_id=player_id)
+        if 'game_over' in request.POST:
+            return redirect('game_over', room_id=room_id, player_id=player_id)
+    word = ChooseRandomFreeWord(room_id)
+    return render(request, 'hatter_round.html', {"word" : word})
+
+def RoundResultsView(request, room_id, player_id):
+    if request.method == "POST":
+        if 'next_turn' in request.POST:
+            ClearRound(room_id)
+            ChooseHatter(room_id)
+            if IsHatter(player_id):
+                return redirect('hatter_round', room_id=room_id, player_id=player_id)
+            else:
+                return redirect('guesser', room_id=room_id, player_id=player_id)
+        if 'game_over' in request.POST:
+            return redirect('game_over', room_id=room_id, player_id=player_id)
+    # TODO: display the words from the finished round in the template
+    return render(request, 'round_results.html', {})
+
+
+def EndGameView(request, room_id, player_id):
+    return render(request, 'game_over.html', {})
+
+

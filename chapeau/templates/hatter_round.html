@@ -1,0 +1,15 @@
+{% load static %}
+<html>
+<body>
+    <p>Vous êtes hatter!</p>
+    <p>Ici il y aura un mot pour déviner!</p>
+    <p> Mot: {{ word }} </p>
+    <form action="" method="post">{% csrf_token %}
+        <input type="submit" name = "skip_word" value="Skip">
+        <input type="submit" name = "next_word" value="Got it!">
+        <input type="submit" name = "next_turn" value="FinishTurn">
+        <input type="submit" name = "game_over" value="GameOver">
+        <input type="hidden" name="word" value="{{ word }}">
+    </form>
+</body>
+</html>
