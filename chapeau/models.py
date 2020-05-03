@@ -4,36 +4,18 @@ import json
 
 class Salle(models.Model):
     id = models.CharField("Nom de la salle", max_length=256, primary_key=True, default="")
-    # mots = models.TextField("Tous les mots du jeu", default={})  # json dump dict
-    # tour_mots = models.TextField("Les mots pour le tour en cours", default={})  # json dump dict
-    #
-    # def AddMots(self,new_mots):
-    #     mots_dict = json.loads(self.mots)
-    #     for mot in new_mots:
-    #         mots_dict[mot] = 0
-    #
-    #     ## if it is empty, save it back to a '{}' string,
-    #     ## if it is not empty, convert the dictionary back to a json string
-    #     if not mots_dict:
-    #         self.mots = '{}'
-    #     else:
-    #         self.data = json.dumps(mots_dict)
-    #
-    # def GetFreeMots(self, new_mots):
-    #     mots_dict = json.loads(self.mots)
-    #     for mot in new_mots:
-    #         mots_dict[mot] = 0
-    #
-    #     ## if it is empty, save it back to a '{}' string,
-    #     ## if it is not empty, convert the dictionary back to a json string
-    #     if not mots_dict:
-    #         self.mots = '{}'
-    #     else:
-    #         self.data = json.dumps(mots_dict)
+
+    PARTICULIER="Particulier"
+    EQUIPE="Equipe"
+    GAME_MODE_CHOICES = (
+        (PARTICULIER, "Chaque jouer joue pour lui-meme."),
+        (PARTICULIER, "Les jouers son dividé en équipes."),
+    )
+    mode = models.CharField("Nom de la salle", max_length=256, choices=GAME_MODE_CHOICES, default='Equipe')
 
 class  Mot(models.Model):
     mot = models.CharField("Mot", max_length=256, default="")
-    salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Mot is one-to-many.
+    salle = models.ForeignKey(Salle, on_delete=models.CASCADE, db_index=True)  # Salle-Mot is one-to-many.
     libre = models.BooleanField("Est-ce que le mot est libre?", default=True)
 
     # specifique a un tour
@@ -41,19 +23,37 @@ class  Mot(models.Model):
     passe = models.BooleanField("Est-ce que le mot est passé?", default=False)
     tour = models.BooleanField("Currently in tour", default=False)
 
-    # unique contraint
+    # unique constraint
     class Meta:
-        unique_together = (('mot', 'salle'))
+        constraints = [
+            models.UniqueConstraint(fields= ['mot','salle'], name='unique words in room'),
+        ]
+
+class Equipe(models.Model):
+    nom = models.CharField("Nom de l'equipe", max_length=256, default="")
+    salle = models.ForeignKey(Salle, on_delete=models.CASCADE, db_index=True)  # Salle-Jouer is one-to-many.
+    score = models.IntegerField(default=0)
+    ordered_index = models.IntegerField(default=None, null=True)
+
+    # unique constraint
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['nom', 'salle'], name='unique team in game room'),
+            models.UniqueConstraint(fields=['ordered_index', 'salle'], name='unique team order in game room'),
+        ]
 
 
 class Jouer(models.Model):
-    nom = models.CharField("Nom de le jouer", max_length=256)
-    salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Jouer is one-to-many.
+    nom = models.CharField("Nom de le jouer", max_length=256, blank=False)
+    #salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Jouer is one-to-many.
+    equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, db_index=True)  # Equipe-Jouer is one-to-many.
     hatter = models.BooleanField("Etat de  le jouer", default=False)
-    score = models.IntegerField(default=0)
 
-    order_index = models.IntegerField(default=None, null=True)
+    ordered_index = models.IntegerField(default=None, null=True) # order within team
 
-    # unique contraint
+    # unique constraints
     class Meta:
-        unique_together = (('nom', 'salle'),('order_index', 'salle'))
+        constraints = [
+            models.UniqueConstraint(fields=['ordered_index', 'equipe'], name='unique player order in team'),
+            #models.UniqueConstraint(fields=['nom', 'equipe__salle'], name='unique player name in game room'),
+        ]

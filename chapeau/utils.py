@@ -1,6 +1,7 @@
 from .models import Salle
 from .models import Mot
 from .models import Jouer
+from .models import Equipe
 
 import random
 
@@ -10,35 +11,55 @@ import random
 def GetRoomById(salle_id):
     return Salle.objects.get(id=salle_id)
 
-# return: QuerySet
+# return: QuerySet[Equipe]
+def GetTeams(salle_id):
+    return Salle.objects.get(id=salle_id).equipe_set.all()
+
+# return: QuerySet[Jouer]
 def GetPlayers(salle_id):
-    return Jouer.objects.filter(salle=Salle(id=salle_id))
+    salle = GetRoomById(salle_id)
+    return Jouer.objects.filter(equipe__salle=salle)
 
 def AddWordList(salle_id, word_list):
     for mot in word_list:
         Mot.objects.get_or_create(mot=mot, salle=Salle(id=salle_id))
 
-def AddPlayer(salle_id, player_id):
-    player = Jouer(nom=player_id, salle=GetRoomById(salle_id))
+def AddTeam(salle_id, equipe_nom):
+    return Equipe.objects.create(nom=equipe_nom,salle=Salle(id=salle_id))
+
+# if equipe_nom is null, create default equipe in salle and add player
+def AddPlayer(salle_id, player_nom, equipe_nom=None):
+    if equipe_nom is None:
+        equipe = Equipe.objects.create(salle=Salle(id=salle_id))
+        equipe.save()
+    else:
+        equipe = Equipe.objects.get(salle=Salle(id=salle_id), nom=equipe_nom)
+    player = Jouer(nom=player_nom, equipe=equipe)
     player.save()
+    return player
 
-# Choose hatter and assigned ordered indices
-# Currently, hatter and order chosen at random
-# return chosen hatter or None
+# Choose hatter and assigned ordered indices for teams and players.
 def ChooseHatter(salle_id):
-    player_set = GetPlayers(salle_id)
-    if not player_set.exists():
-        print("No players in game.")
-        return
-
-    index = 0
-    for player in player_set:
-        player.order_index = index
-        if index==0:
-            player.hatter=True
-        player.save()
-        index+=1
-    return player_set[0]
+    hatter = None
+    team_index = 0
+    team_set = GetTeams(salle_id)
+    for team in team_set:
+        # assign team order
+        team.ordered_index = team_index
+        team.save()
+        # assign player order
+        player_index=0
+        player_set = team.jouer_set.all()
+        for player in player_set:
+            player.ordered_index = player_index
+            if team_index==0 and player_index==0:
+                # assign hatter
+                player.hatter=1
+                hatter = player
+            player.save()
+            player_index+=1
+        team_index+=1
+    return hatter
 
 #################################################
 # Actions to be performed within one round of the game.
@@ -84,37 +105,39 @@ def GetWordsInRound(salle_id):
     return [{'word':word.mot, 'passed':word.passe} for word in words]
 
 # return: [str list]
-def GetGuessersInRound(salle_id):
-    return [jouer.nom for jouer in Jouer.objects.filter(salle=Salle(id=salle_id), hatter=False)]
+# def GetGuessersInRound(salle_id):
+#     return [jouer.nom for jouer in Jouer.objects.filter(salle=Salle(id=salle_id), hatter=False)]
 
 # param: list of dicts [{mot: str, passe: bool, player: str}]
-def FixWordsInRound(salle_id, mot_dict_list):
-    for mot_dict in mot_dict_list:
-        if 'mot' not in mot_dict_list:
-            continue
-        # update passe
-        mot_obj = Mot.objects.get(salle=Salle(id=salle_id), mot=mot_dict['mot'])
-        if mot_obj.exists() and 'passe' in mot_dict:
-            mot_obj.passe = mot_dict['passe']
-            mot_obj.save()
+# def FixWordsInRound(salle_id, mot_dict_list):
+#     for mot_dict in mot_dict_list:
+#         if 'mot' not in mot_dict_list:
+#             continue
+#         # update passe
+#         mot_obj = Mot.objects.get(salle=Salle(id=salle_id), mot=mot_dict['mot'])
+#         if mot_obj.exists() and 'passe' in mot_dict:
+#             mot_obj.passe = mot_dict['passe']
+#             mot_obj.save()
 
 # param: list of dicts [{mot: str, passe: bool, player: str}]
+# TODO: update
 def UpdateScoreboard(salle_id, mot_dict_list):
-    hatter = Jouer.objects.filter(salle=Salle(id=salle_id), hatter=True)
-    if not hatter.exists():
-        print("Hatter does not exist for game room ", salle_id)
-    for mot_dict in mot_dict_list:
-        if 'mot' not in mot_dict_list:
-            continue
-        # update Player and Hatter scores
-        if 'passe' in mot_dict and mot_dict['passe']!=True:
-            hatter.score += 1
-            hatter.save()
-            if 'player' in mot_dict:
-                player = Jouer.objects.get(salle=Salle(id=salle_id), nom=mot_dict['player'])
-                if player.exists():
-                    player.score+=1
-                    player.save()
+    return
+    # hatter = Jouer.objects.filter(salle=Salle(id=salle_id), hatter=True)
+    # if not hatter.exists():
+    #     print("Hatter does not exist for game room ", salle_id)
+    # for mot_dict in mot_dict_list:
+    #     if 'mot' not in mot_dict_list:
+    #         continue
+    #     # update Player and Hatter scores
+    #     if 'passe' in mot_dict and mot_dict['passe']!=True:
+    #         hatter.score += 1
+    #         hatter.save()
+    #         if 'player' in mot_dict:
+    #             player = Jouer.objects.get(salle=Salle(id=salle_id), nom=mot_dict['player'])
+    #             if player.exists():
+    #                 player.score+=1
+    #                 player.save()
 
 
 def FlushRound(salle_id):
@@ -130,36 +153,50 @@ def FlushRound(salle_id):
 ##################################################
 
 # return: dict [player: str, score: int]
+# TODO: update
 def GetScoreboard(salle_id):
-    player_set = GetOrderedPlayers(salle_id)
-    scoreboard = {}
-    for player in player_set:
-        scoreboard[player.nom] = player.score
-    return scoreboard
+    return
+    # player_set = GetOrderedPlayers(salle_id)
+    # scoreboard = {}
+    # for player in player_set:
+    #     scoreboard[player.nom] = player.score
+    # return scoreboard
 
 # return: QuerySet
 def GetOrderedPlayers(salle_id):
     return Jouer.objects.filter(salle=Salle(id=salle_id)).order_by('order_index')
 
+# TODO: update
 def UpdateHatter(salle_id):
-    player_set = GetOrderedPlayers(salle_id)
-    if not player_set.exists():
-        print("No players")
+    return
+    # player_set = GetOrderedPlayers(salle_id)
+    # if not player_set.exists():
+    #     print("No players")
+    #
+    # old_hatter_set = player_set.filter(hatter=True)
+    # if old_hatter_set.exists() and old_hatter_set[0].order_index is not None:
+    #   old_hatter = old_hatter_set[0]
+    #   old_index = list(player_set).index(old_hatter)
+    #
+    #   # Clear old hatter
+    #   old_hatter.hatter=False
+    #   old_hatter.save()
+    #
+    #   # Set new hatter
+    #   new_index = (old_index+1)%len(player_set)
+    #   player_set[new_index].hatter=True
+    #   player_set[new_index].save()
+    #
+    # else:
+    #     print("No order/hatter. Assigning new player order and hatter.")
+    #     ChooseHatter(salle_id)
 
-    old_hatter_set = player_set.filter(hatter=True)
-    if old_hatter_set.exists() and old_hatter_set[0].order_index is not None:
-      old_hatter = old_hatter_set[0]
-      old_index = list(player_set).index(old_hatter)
+#################################################
+# Actions to be performed between games.
+##################################################
 
-      # Clear old hatter
-      old_hatter.hatter=False
-      old_hatter.save()
-
-      # Set new hatter
-      new_index = (old_index+1)%len(player_set)
-      player_set[new_index].hatter=True
-      player_set[new_index].save()
-
-    else:
-        print("No order/hatter. Assigning new player order and hatter.")
-        ChooseHatter(salle_id)
+# if clear_game = True, clear words and scoreboard
+# if clear_game = False, set words attributes to default
+# TODO: update
+def FlushGame(salle_id, clear_game=False):
+   return

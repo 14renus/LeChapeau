@@ -3,6 +3,7 @@ from .. import utils
 from ..models import Salle
 from ..models import Mot
 from ..models import Jouer
+from ..models import Equipe
 
 class RoundUtilsTest(TestCase):
 
@@ -10,12 +11,18 @@ class RoundUtilsTest(TestCase):
         # Rooms
         pumpkin = Salle.objects.create(id='pumpkin')
         courgette = Salle.objects.create(id='courgette')
+        # Equipe
+        rose = Equipe.objects.create(nom='rose', salle=pumpkin)
+        violet = Equipe.objects.create(nom='violet', salle=pumpkin)
+        rose2 = Equipe.objects.create(nom='rose', salle=courgette)
+        violet2 = Equipe.objects.create(nom='violet', salle=courgette)
         # Players
-        Jouer.objects.create(nom='Dasha', salle=pumpkin)
-        Jouer.objects.create(nom='Renu', salle=pumpkin)
-        Jouer.objects.create(nom='May', salle=pumpkin)
-        Jouer.objects.create(nom='Dasha', salle=courgette)
-        Jouer.objects.create(nom='Diego', salle=courgette)
+        Jouer.objects.create(nom='Dasha', equipe=rose)
+        Jouer.objects.create(nom='Renu', equipe=violet)
+        Jouer.objects.create(nom='May', equipe=violet)
+        Jouer.objects.create(nom='Diego', equipe=rose)
+        Jouer.objects.create(nom='Dasha',equipe=rose2)
+        Jouer.objects.create(nom='Etienne', equipe=violet2)
         # Words
         Mot.objects.create(mot='whale',  salle=pumpkin)
         Mot.objects.create(mot='pig', salle=pumpkin)
@@ -24,9 +31,13 @@ class RoundUtilsTest(TestCase):
     def _get_words(self, Mot_query_set):
         return [mot.mot for mot in Mot_query_set]
 
+    def test_GetTeams(self):
+        results = [team.nom for team in utils.GetTeams(salle_id='pumpkin')]
+        self.assertCountEqual(results, ["rose", "violet"])
+
     def test_GetPlayers(self):
         results = [player.nom for player in utils.GetPlayers(salle_id='pumpkin')]
-        self.assertCountEqual(results,["Dasha","Renu","May"])
+        self.assertCountEqual(results, ["Dasha","Renu","May","Diego"])
 
     def test_AddWordList(self):
         utils.AddWordList(salle_id='pumpkin', word_list=['camel'])
@@ -41,6 +52,26 @@ class RoundUtilsTest(TestCase):
         results = self._get_words(Mot.objects.filter(salle=Salle(id='pumpkin')))
         self.assertCountEqual(results, ['whale', 'pig', 'camel'])
         #self.assertQuerysetEqual(Mot.objects.filter(salle=Salle(id='pumpkin')), [repr(mot1), repr(mot2), repr(mot3)], ordered=False)
+
+    def test_addTeam(self):
+        utils.AddTeam(salle_id='pumpkin', equipe_nom='daisy')
+        # no error should be raised.
+        Equipe.objects.get(nom='daisy',salle=Salle(id='pumpkin'))
+
+    def test_AddPlayer(self):
+        # Test equipe_nom=None
+        utils.AddPlayer(salle_id='courgette', player_nom='Dad')
+
+        salle = Salle.objects.get(id='courgette')
+        equipe = Equipe.objects.get(nom='', salle=salle)
+        Jouer.objects.get(nom='Dad', equipe=equipe)
+
+        # Test equipe_nom!=None
+        utils.AddPlayer(salle_id='courgette', player_nom='Dad', equipe_nom='violet')
+
+        salle = Salle.objects.get(id='courgette')
+        equipe = Equipe.objects.get(nom='violet', salle=salle)
+        Jouer.objects.get(nom='Dad', equipe=equipe)
 
     def test_GetFreeWords(self):
         results = utils.GetFreeWordsList(salle_id='pumpkin')
@@ -85,43 +116,60 @@ class RoundUtilsTest(TestCase):
     def test_GetGuessersInRound(self):
         pass
 
+    def test_FixWordsInRound(self):
+        pass
+
+    def test_UpdateScoreboard(self):
+        pass
+
     def test_FlushRound(self):
         pass
 
-    # TODO: check order is set correctly
+    # # TODO: check order is set correctly
+    # Checks hatter is unique
+    # Checks ordered_index in teams and players are not None
     def test_ChooseHatter(self):
         chosen_hatter = utils.ChooseHatter(salle_id='pumpkin')
 
-        player_set = Jouer.objects.filter(salle=Salle(id='pumpkin'))
+        team_set = Equipe.objects.filter(salle=Salle(id='pumpkin'))
 
         found_hatter=None
-        for player in player_set:
-            self.assertFalse(player.order_index is None, "Order index should be set.")
-            if player.hatter:
-                if not found_hatter:
-                    found_hatter=player.nom
-                else:
-                    self.fail("Failed. Hatter is not unique.")
+        for team in team_set:
+            self.assertFalse(team.ordered_index is None, "Team order index should be set.")
+            player_set = team.jouer_set.all()
+            for player in player_set:
+                if player.hatter:
+                    if not found_hatter:
+                        found_hatter=player.nom
+                    else:
+                        self.fail("Failed. Hatter is not unique.")
         self.assertTrue(found_hatter is not None)
         self.assertTrue(found_hatter == chosen_hatter.nom)
 
-    def test_UpdateHatter(self):
-        player_set = Jouer.objects.filter(salle=Salle(id='pumpkin'))
-        # set dummy index and hatter
-        index=0
-        for player in player_set:
-            player.order_index = index
-            if index==1:
-                player.hatter=True
-            index+=1
-            player.save()
-
-        utils.UpdateHatter(salle_id='pumpkin')
-
-        ordered_player_set = Jouer.objects.filter(salle=Salle(id='pumpkin')).order_by("order_index")
-        self.assertTrue(ordered_player_set[2].hatter)
-
-
+    # def test_UpdateHatter(self):
+    #     player_set = Jouer.objects.filter(salle=Salle(id='pumpkin'))
+    #
+    #     # set dummy order index and hatter
+    #     index=0
+    #     for player in player_set:
+    #         player.order_index = index
+    #         if index==1:
+    #             player.hatter=True
+    #         index+=1
+    #         player.save()
+    #
+    #     utils.UpdateHatter(salle_id='pumpkin')
+    #
+    #     ordered_player_set = Jouer.objects.filter(salle=Salle(id='pumpkin')).order_by("order_index")
+    #     self.assertFalse(ordered_player_set[0].hatter)
+    #     self.assertFalse(ordered_player_set[1].hatter)
+    #     self.assertTrue(ordered_player_set[2].hatter)
+    #
+    #     utils.UpdateHatter(salle_id='pumpkin')
+    #     self.assertTrue(ordered_player_set[0].hatter)
+    #     self.assertFalse(ordered_player_set[1].hatter)
+    #     self.assertFalse(ordered_player_set[2].hatter)
+    #
 
 
 
