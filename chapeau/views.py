@@ -23,9 +23,11 @@ def AddPlayerView(request, room_id):
         if form.is_valid():
             words = form.cleaned_data['words']
             player_id = form.cleaned_data['player_id']
+            team_id = form.cleaned_data['team_id']
             AddWordList(room_id, words.split(','))
-            # TODO: add an exception and throw a readable error if a player already exists.
-            AddPlayer(room_id, player_id)
+            # TODO: throw a readable error if a player with this name already exists in the game
+            AddTeamIfDoesNotExist(room_id, team_id)
+            AddPlayer(room_id, player_id, team_id)
             return redirect('start_game', room_id=room_id, player_id=player_id)
     form = PlayerForm()
     return render(request, 'add_players.html', {"form" : form})
@@ -35,6 +37,7 @@ def StartGameView(request, room_id, player_id):
         form = StartGameForm(request.POST)
         if form.is_valid():
             ChooseHatter(room_id)
+            # TODO: remove IsHatter
             if IsHatter(room_id, player_id):
                 return redirect('hatter_preview', room_id=room_id, player_id=player_id)
             else:
@@ -79,7 +82,8 @@ def RoundResultsView(request, room_id, player_id):
     if request.method == "POST":
         if 'next_turn' in request.POST:
             FlushRound(room_id)
-            ChooseHatter(room_id)
+            UpdateHatter(room_id)
+            # TODO: remove IsHatter
             if IsHatter(room_id, player_id):
                 return redirect('hatter_round', room_id=room_id, player_id=player_id)
             else:

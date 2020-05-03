@@ -25,7 +25,7 @@ SECRET_KEY = '(+-!)^0y$y3fj%8r%g+k%)25r9-r8=_95aib3blj_y)=nx%8$j'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1']
+ALLOWED_HOSTS = ['localhost','127.0.0.1','chapeau.pythonanywhere.com']
 
 
 # Application definition
@@ -125,3 +125,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MEDIA_URL = '/media/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
