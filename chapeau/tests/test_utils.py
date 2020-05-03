@@ -162,27 +162,34 @@ class RoundUtilsTest(TestCase):
         # self.assertTrue(hatter_name==chosen_hatter)
         self.assertEquals(chosen_hatter, 'Dasha')
 
-        # Team hatter is set
+        # Team hatter and order is set
         rose = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='rose')
         violet = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='violet')
         self.assertTrue(rose.hatter)
+        self.assertEqual(rose.ordered_index, 0)
         self.assertFalse(violet.hatter)
+        self.assertEqual(violet.ordered_index, 1)
 
-        # Player Hatter for  each team is  set
+        # Player Hatter and order for each team is  set
         dasha = Jouer.objects.get(nom='Dasha', equipe=rose)
         diego = Jouer.objects.get(nom='Diego', equipe=rose)
         renu = Jouer.objects.get(nom='Renu', equipe=violet)
         may = Jouer.objects.get(nom='May', equipe=violet)
         self.assertTrue(dasha.hatter)
+        self.assertEqual(dasha.ordered_index, 0)
         self.assertFalse(diego.hatter)
+        self.assertEqual(diego.ordered_index, 1)
         self.assertTrue(renu.hatter)
+        self.assertEqual(renu.ordered_index, 0)
         self.assertFalse(may.hatter)
+        self.assertEqual(may.ordered_index, 1)
 
 
     def test_UpdateHatter(self):
-        # set order and first hatter
+        #### 1. set order and first hatter
         utils.ChooseHatter(salle_id='pumpkin')
 
+        #### 2. Next hatter = Renu in Violet
         chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
         # Correct hatter
         self.assertEquals(chosen_hatter, 'Renu')
@@ -191,16 +198,34 @@ class RoundUtilsTest(TestCase):
         violet = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='violet')
         self.assertFalse(rose.hatter)
         self.assertTrue(violet.hatter)
-        # Update
+        # Update Players in rose
+        dasha = Jouer.objects.get(nom='Dasha', equipe=rose)
+        diego = Jouer.objects.get(nom='Diego', equipe=rose)
+        self.assertFalse(dasha.hatter)
+        self.assertTrue(diego.hatter)
 
-        # chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
-        # self.assertEquals(chosen_hatter, 'Diego')
-        #
-        # chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
-        # self.assertEquals(chosen_hatter, 'May')
-        #
-        # chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
-        # self.assertEquals(chosen_hatter, 'Dasha')
+        #### 2. Next hatter = Diego in Rose
+        chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
+        # Update team
+        rose = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='rose')
+        violet = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='violet')
+        self.assertTrue(rose.hatter)
+        self.assertFalse(violet.hatter)
+        # Update Players in violet
+        renu = Jouer.objects.get(nom='Renu', equipe=violet)
+        may = Jouer.objects.get(nom='May', equipe=violet)
+        self.assertFalse(renu.hatter)
+        self.assertTrue(may.hatter)
+        # Correct hatter
+        self.assertEquals(chosen_hatter, 'Diego')
+
+        #### 3. Next hatter = May in Violet
+        chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
+        self.assertEquals(chosen_hatter, 'May')
+
+        #### 4. Next hatter = Dasha in Rose
+        chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
+        self.assertEquals(chosen_hatter, 'Dasha')
 
 
 
