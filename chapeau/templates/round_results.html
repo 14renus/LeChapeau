@@ -1,13 +1,21 @@
-{% load static %}
-<html>
-<body>
-    <p>Ici il y auront les results de le tour</p>
+{% extends 'index.html' %}
+{% block content %}
+    <h2>Résultats de le tour</h2>
+    <p>Les mots dévinés</p>
     {% for word in words %}
     <p> {{ word }} </p>
     {% endfor %}
+    <hr>
     <form action="" method="post">{% csrf_token %}
-        <input type="submit" name = "next_turn" value="NextTurn">
-        <input type="submit" name = "game_over" value="GameOver">
+        <div class="row">
+            <div class="col-md-6">
+                <input type="submit" class="btn btn-primary btn-large" name = "next_turn" value="Prochain tour">
+            </div>
+            <div class="col-md-6 text-right">
+                 <input type="submit" class="btn active btn-secondary btn-large" name = "game_over" value="Game over">
+            </div>
+        </div>
+<!--         <input type="submit" name = "next_turn" value="NextTurn"> -->
+<!--         <input type="submit" name = "game_over" value="GameOver"> -->
     </form>
-</body>
-</html>
+{% endblock %}

@@ -1,9 +1,8 @@
-{% load static %}
-<html>
-<body>
-    <p>Commencez le joue!</p>
+{% extends 'index.html' %}
+{% block content %}
+    <h3>Commence le jeux</h3>
+    <p>Clique Lancer quand tu es pret à jouer. </p>
     <form method="POST" class="post-form">{% csrf_token %}
-        <button type="submit" class="save btn btn-default">Lancer!</button>
+        <button type="submit" class="save btn btn-primary btn-large">Lancer</button>
     </form>
-</body>
-</html>
+{% endblock %}

@@ -1,9 +1,8 @@
-{% load static %}
-<html>
-<body>
-    <p>Vous êtes hatter!</p>
+{% extends 'index.html' %}
+{% block content %}
+    <h2>Vous êtes hatter!</h2>
+    <p>Ton but est d'éxpliquer le plus mots possible. Clique Lancer quand tu es prét.</p>
     <form action="" method="post">{% csrf_token %}
-        <input type="submit" name = "ready" value="Ready">
+        <input type="submit" class="save btn btn-primary btn-large" name = "ready" value="Lancer">
     </form>
-</body>
-</html>
+{% endblock %}

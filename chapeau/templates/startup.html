@@ -1,10 +1,13 @@
-{% load static %}
-<html>
-<body>
-    <p>Créer votre Salle!</p>
+{% extends 'index.html' %}
+{% block content %}
+    <h2>
+        Bienvenue au chapeau!
+    </h2>
+    <p>
+        Crée ton nouvelle salle de jeux ou joins l'une qui déjà existe. Tape le nom de la salle et clique lancer.
+    </p>
     <form method="POST" class="post-form">{% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="save btn btn-default">Save</button>
+        <button type="submit" class="save btn btn-primary btn-large">Lancer</button>
     </form>
-</body>
-</html>
+{% endblock %}

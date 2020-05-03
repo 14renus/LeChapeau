@@ -80,8 +80,6 @@ def RoundResultsView(request, room_id, player_id):
     if request.method == "POST":
         if 'next_turn' in request.POST:
             FlushRound(room_id)
-            UpdateHatter(room_id)
-            # TODO: remove IsHatter
             if player_id == UpdateHatter(room_id):
                 return redirect('hatter_round', room_id=room_id, player_id=player_id)
             else:

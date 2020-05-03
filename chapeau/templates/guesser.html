@@ -1,10 +1,17 @@
-{% load static %}
-<html>
-<body>
-    <p>Vous êtes devineur!</p>
+{% extends 'index.html' %}
+{% block content %}
+    <h3>Vous êtes devineur!</h3>
     <form action="" method="post">{% csrf_token %}
-        <input type="submit" name = "next_turn" value="NextTurn">
-        <input type="submit" name = "game_over" value="GameOver">
+<!--         <input type="submit" name = "next_turn" value="NextTurn"> -->
+<!--         <input type="submit" name = "game_over" value="GameOver"> -->
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <input type="submit" class="btn btn-secondary btn-large" name = "next_turn" value="Prochain tour">
+            </div>
+            <div class="col-md-6 text-right">
+                 <input type="submit" class="btn active btn-secondary btn-large" name = "game_over" value="Game over">
+            </div>
+        </div>
     </form>
-</body>
-</html>
+{% endblock %}

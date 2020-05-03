@@ -1,10 +1,13 @@
-{% load static %}
-<html>
-<body>
-    <p>Ajoute ton jouer et tes mots!</p>
+{% extends 'index.html' %}
+{% block content %}
+    <h2>
+        Crée ton équipe et mets tes mots dans le chapeau
+    </h2>
+    <p>
+        Choisi le nom de ton jouer et ton équipe. Puis ecrits les mots pour cette jeu.
+    </p>
     <form method="POST" class="post-form">{% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="save btn btn-default">Save</button>
+        <button type="submit" class="save btn btn-primary">Créer</button>
     </form>
-</body>
-</html>
+{% endblock %}
