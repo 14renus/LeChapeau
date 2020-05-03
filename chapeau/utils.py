@@ -174,18 +174,16 @@ def GetOrderedPlayers(salle_id):
 
 # return set : Player name
 def UpdateHatter(salle_id):
-    team_set = GetTeams(salle_id)
+    team_set = GetTeams(salle_id).order_by('ordered_index')
     curr_team_set = team_set.filter(hatter=True)
     if not curr_team_set.exists():
-        print("no current hatter team.")
-        return ChooseHatter(salle_id)
-    curr_team = curr_team_set[0]
-    player_set = curr_team.jouer_set.all()
+        raise Exception("Hatter team not set. Did you call ChooseHatter?")
+    curr_team=curr_team_set[0]
+    player_set = curr_team.jouer_set.order_by('ordered_index')
     curr_hatter_set = player_set.filter(hatter=True)
     if not curr_hatter_set.exists():
-        print("no current hatter player.")
-        return ChooseHatter(salle_id)
-    curr_hatter = curr_hatter_set[0]
+        raise Exception("Hatter team set but not player hatter.")
+    curr_hatter=curr_hatter_set[0]
 
     # update player hatter in O(1)
     curr_hatter_index = curr_hatter.ordered_index
@@ -201,13 +199,13 @@ def UpdateHatter(salle_id):
     team_set[curr_team_index].hatter=False
     team_set[curr_team_index].save()
     team_set[new_team_index].hatter=True
-    team_set[curr_team_index].save()
+    team_set[new_team_index].save()
 
-    curr_hatter_set = team_set[new_hatter_index].jouer_set.filter(hatter=True)
+    curr_hatter_set = team_set[new_team_index].jouer_set.filter(hatter=True)
     if curr_hatter_set.exists():
         return curr_hatter_set[0].nom
     else:
-        return None
+        raise Exception("No hatter is set.")
 
 
 #################################################
