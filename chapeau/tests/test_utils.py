@@ -53,10 +53,13 @@ class RoundUtilsTest(TestCase):
         self.assertCountEqual(results, ['whale', 'pig', 'camel'])
         #self.assertQuerysetEqual(Mot.objects.filter(salle=Salle(id='pumpkin')), [repr(mot1), repr(mot2), repr(mot3)], ordered=False)
 
-    def test_addTeam(self):
-        utils.AddTeam(salle_id='pumpkin', equipe_nom='daisy')
+    def test_addTeamIfDoesNotExist(self):
+        utils.AddTeamIfDoesNotExist(salle_id='pumpkin', equipe_nom='daisy')
         # no error should be raised.
-        Equipe.objects.get(nom='daisy',salle=Salle(id='pumpkin'))
+        Equipe.objects.get(nom='daisy', salle=Salle(id='pumpkin'))
+        utils.AddTeamIfDoesNotExist(salle_id='pumpkin', equipe_nom='daisy')
+        # no error should be raised.
+        Equipe.objects.get(nom='daisy', salle=Salle(id='pumpkin'))
 
     def test_AddPlayer(self):
         # Test equipe_nom=None

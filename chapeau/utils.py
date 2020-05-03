@@ -24,8 +24,10 @@ def AddWordList(salle_id, word_list):
     for mot in word_list:
         Mot.objects.get_or_create(mot=mot, salle=Salle(id=salle_id))
 
-def AddTeam(salle_id, equipe_nom):
-    return Equipe.objects.create(nom=equipe_nom,salle=Salle(id=salle_id))
+def AddTeamIfDoesNotExist(salle_id, equipe_nom):
+    if Equipe.objects.filter(nom=equipe_nom, salle=Salle(id=salle_id)).exists():
+        return
+    return Equipe.objects.create(nom=equipe_nom, salle=Salle(id=salle_id))
 
 # if equipe_nom is null, create default equipe in salle and add player
 def AddPlayer(salle_id, player_nom, equipe_nom=None):
