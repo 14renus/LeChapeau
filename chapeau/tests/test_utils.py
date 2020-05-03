@@ -126,25 +126,31 @@ class RoundUtilsTest(TestCase):
         pass
 
     # # TODO: check order is set correctly
-    # Checks hatter is unique
+    # Checks hatter is unique per team
     # Checks ordered_index in teams and players are not None
     def test_ChooseHatter(self):
-        chosen_hatter = utils.ChooseHatter(salle_id='pumpkin')
+        utils.ChooseHatter(salle_id='pumpkin')
 
         team_set = Equipe.objects.filter(salle=Salle(id='pumpkin'))
 
-        found_hatter=None
+        found_team_hatter = False
         for team in team_set:
             self.assertFalse(team.ordered_index is None, "Team order index should be set.")
+            if team.hatter:
+                if not found_team_hatter:
+                    found_team_hatter = True
+                else:
+                    self.fail("Failed. Team hatter is not unique.")
+            found_player_hatter = False
             player_set = team.jouer_set.all()
             for player in player_set:
                 if player.hatter:
-                    if not found_hatter:
-                        found_hatter=player.nom
+                    if not found_player_hatter:
+                        found_player_hatter=True
                     else:
-                        self.fail("Failed. Hatter is not unique.")
-        self.assertTrue(found_hatter is not None)
-        self.assertTrue(found_hatter == chosen_hatter.nom)
+                        self.fail("Failed. Player hatter is not unique.")
+            self.assertTrue(found_player_hatter, "No player hatter found.")
+        self.assertTrue(found_team_hatter, "No team hatter found.")
 
     # def test_UpdateHatter(self):
     #     player_set = Jouer.objects.filter(salle=Salle(id='pumpkin'))
@@ -169,7 +175,7 @@ class RoundUtilsTest(TestCase):
     #     self.assertTrue(ordered_player_set[0].hatter)
     #     self.assertFalse(ordered_player_set[1].hatter)
     #     self.assertFalse(ordered_player_set[2].hatter)
-    #
+
 
 
 
