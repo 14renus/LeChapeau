@@ -14,13 +14,15 @@ class RoundUtilsTest(TestCase):
         # Equipe
         rose = Equipe.objects.create(nom='rose', salle=pumpkin)
         violet = Equipe.objects.create(nom='violet', salle=pumpkin)
+
         rose2 = Equipe.objects.create(nom='rose', salle=courgette)
         violet2 = Equipe.objects.create(nom='violet', salle=courgette)
         # Players
         Jouer.objects.create(nom='Dasha', equipe=rose)
+        Jouer.objects.create(nom='Diego', equipe=rose)
         Jouer.objects.create(nom='Renu', equipe=violet)
         Jouer.objects.create(nom='May', equipe=violet)
-        Jouer.objects.create(nom='Diego', equipe=rose)
+
         Jouer.objects.create(nom='Dasha',equipe=rose2)
         Jouer.objects.create(nom='Etienne', equipe=violet2)
         # Words
@@ -129,52 +131,73 @@ class RoundUtilsTest(TestCase):
     # Checks hatter is unique per team
     # Checks ordered_index in teams and players are not None
     def test_ChooseHatter(self):
+        chosen_hatter = utils.ChooseHatter(salle_id='pumpkin')
+
+        # team_set = Equipe.objects.filter(salle=Salle(id='pumpkin'))
+        #
+        # found_hatter_name = None
+        # found_team_hatter = False
+        # for team in team_set:
+        #     self.assertFalse(team.ordered_index is None, "Team order index should be set.")
+        #     if team.hatter:
+        #         if not found_team_hatter:
+        #             found_team_hatter = True
+        #         else:
+        #             self.fail("Failed. Team hatter is not unique.")
+        #     found_player_hatter = False
+        #     player_set = team.jouer_set.all()
+        #     for player in player_set:
+        #         if player.hatter:
+        #             if not found_player_hatter:
+        #                 found_player_hatter=True
+        #             else:
+        #                 self.fail("Failed. Player hatter is not unique.")
+        #             if team.hatter:
+        #                 hatter_name=player.nom
+        #     self.assertTrue(found_player_hatter, "No player hatter found.")
+        # self.assertTrue(found_team_hatter, "No team hatter found.")
+        # self.assertTrue(hatter_name==chosen_hatter)
+        self.assertEquals(chosen_hatter, 'Dasha')
+
+        # Team hatter is set
+        rose = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='rose')
+        violet = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='violet')
+        self.assertTrue(rose.hatter)
+        self.assertFalse(violet.hatter)
+
+        # Player Hatter for  each team is  set
+        dasha = Jouer.objects.get(nom='Dasha', equipe=rose)
+        diego = Jouer.objects.get(nom='Diego', equipe=rose)
+        renu = Jouer.objects.get(nom='Renu', equipe=violet)
+        may = Jouer.objects.get(nom='May', equipe=violet)
+        self.assertTrue(dasha.hatter)
+        self.assertFalse(diego.hatter)
+        self.assertTrue(renu.hatter)
+        self.assertFalse(may.hatter)
+
+
+    def test_UpdateHatter(self):
+        # set order and first hatter
         utils.ChooseHatter(salle_id='pumpkin')
 
-        team_set = Equipe.objects.filter(salle=Salle(id='pumpkin'))
+        chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
+        # Correct hatter
+        self.assertEquals(chosen_hatter, 'Renu')
+        # Update team
+        rose = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='rose')
+        violet = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='violet')
+        self.assertFalse(rose.hatter)
+        self.assertTrue(violet.hatter)
+        # Update
 
-        found_team_hatter = False
-        for team in team_set:
-            self.assertFalse(team.ordered_index is None, "Team order index should be set.")
-            if team.hatter:
-                if not found_team_hatter:
-                    found_team_hatter = True
-                else:
-                    self.fail("Failed. Team hatter is not unique.")
-            found_player_hatter = False
-            player_set = team.jouer_set.all()
-            for player in player_set:
-                if player.hatter:
-                    if not found_player_hatter:
-                        found_player_hatter=True
-                    else:
-                        self.fail("Failed. Player hatter is not unique.")
-            self.assertTrue(found_player_hatter, "No player hatter found.")
-        self.assertTrue(found_team_hatter, "No team hatter found.")
-
-    # def test_UpdateHatter(self):
-    #     player_set = Jouer.objects.filter(salle=Salle(id='pumpkin'))
-    #
-    #     # set dummy order index and hatter
-    #     index=0
-    #     for player in player_set:
-    #         player.order_index = index
-    #         if index==1:
-    #             player.hatter=True
-    #         index+=1
-    #         player.save()
-    #
-    #     utils.UpdateHatter(salle_id='pumpkin')
-    #
-    #     ordered_player_set = Jouer.objects.filter(salle=Salle(id='pumpkin')).order_by("order_index")
-    #     self.assertFalse(ordered_player_set[0].hatter)
-    #     self.assertFalse(ordered_player_set[1].hatter)
-    #     self.assertTrue(ordered_player_set[2].hatter)
-    #
-    #     utils.UpdateHatter(salle_id='pumpkin')
-    #     self.assertTrue(ordered_player_set[0].hatter)
-    #     self.assertFalse(ordered_player_set[1].hatter)
-    #     self.assertFalse(ordered_player_set[2].hatter)
+        # chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
+        # self.assertEquals(chosen_hatter, 'Diego')
+        #
+        # chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
+        # self.assertEquals(chosen_hatter, 'May')
+        #
+        # chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
+        # self.assertEquals(chosen_hatter, 'Dasha')
 
 
 

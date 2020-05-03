@@ -25,6 +25,13 @@ python manage.py runserver
 ## Dev
 
 ### Test
+
+Run all tests
 ```
 python manage.py test --keepdb
+```
+
+Test specific file
+```
+python manage.py test chapeau.tests.test_utils
 ```

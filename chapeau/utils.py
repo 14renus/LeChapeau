@@ -39,8 +39,9 @@ def AddPlayer(salle_id, player_nom, equipe_nom=None):
     return player
 
 # Choose hatter and assigned ordered indices for teams and players.
+# Return str : hatter name
 def ChooseHatter(salle_id):
-    hatter = None
+    hatter_name = None
     team_index = 0
     team_set = GetTeams(salle_id)
     for team in team_set:
@@ -57,10 +58,12 @@ def ChooseHatter(salle_id):
             if player_index==0:
                 # assign player hatter
                 player.hatter = True
+                if team_index==0:
+                    hatter_name = player.nom
             player.save()
             player_index+=1
         team_index+=1
-    #return team_set[0].player_set[0] # return first team's hatter
+    return hatter_name
 
 #################################################
 # Actions to be performed within one round of the game.
@@ -167,10 +170,42 @@ def GetScoreboard(salle_id):
 def GetOrderedPlayers(salle_id):
     return Jouer.objects.filter(salle=Salle(id=salle_id)).order_by('order_index')
 
-# return Player
+# return set : Player name
 def UpdateHatter(salle_id):
-    curr_hatter = Jouer.objects.filter(equipe__salle=Salle(id=salle_id), hatter=True)
-    curr_team = curr_hatter.equipe
+    team_set = GetTeams(salle_id)
+    curr_team_set = team_set.filter(hatter=True)
+    if not curr_team_set.exists():
+        print("no current hatter team.")
+        return ChooseHatter(salle_id)
+    curr_team=curr_team_set[0]
+    player_set = curr_team.jouer_set.all()
+    curr_hatter_set = player_set.filter(hatter=True)
+    if not  curr_hatter_set.exists():
+        print("no current hatter player.")
+        return ChooseHatter(salle_id)
+    curr_hatter=curr_hatter_set[0]
+
+    # update player hatter in O(1)
+    curr_hatter_index = curr_hatter.ordered_index
+    new_hatter_index = (curr_hatter_index+1) % len(player_set)
+    player_set[curr_hatter_index].hatter=False
+    player_set[curr_hatter_index].save()
+    player_set[new_hatter_index].hatter=True
+    player_set[new_hatter_index].save()
+
+    # update team hatter in O(1)
+    curr_team_index = curr_team.ordered_index
+    new_team_index = (curr_team_index+1) % len(team_set)
+    team_set[curr_team_index].hatter=False
+    team_set[curr_team_index].save()
+    team_set[new_team_index].hatter=True
+    team_set[curr_team_index].save()
+
+    curr_hatter_set = team_set[new_hatter_index].jouer_set.filter(hatter=True)
+    if curr_hatter_set.exists():
+        return curr_hatter_set[0].nom
+    else:
+        return None
 
 
 #################################################
