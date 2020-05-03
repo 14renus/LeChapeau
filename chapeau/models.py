@@ -33,7 +33,8 @@ class Equipe(models.Model):
     nom = models.CharField("Nom de l'equipe", max_length=256, default="")
     salle = models.ForeignKey(Salle, on_delete=models.CASCADE, db_index=True)  # Salle-Jouer is one-to-many.
     score = models.IntegerField(default=0)
-    ordered_index = models.IntegerField(default=None, null=True)
+    ordered_index = models.IntegerField(default=None, null=True) # order of team within game
+    hatter = models.BooleanField("Etat de  l'equipe (hatter/guesser)?", default=False)
 
     # unique constraint
     class Meta:
@@ -47,7 +48,7 @@ class Jouer(models.Model):
     nom = models.CharField("Nom de le jouer", max_length=256, blank=False)
     #salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Jouer is one-to-many.
     equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, db_index=True)  # Equipe-Jouer is one-to-many.
-    hatter = models.BooleanField("Etat de  le jouer", default=False)
+    hatter = models.BooleanField("Etat de  le jouer (hatter/guesser)", default=False)
 
     ordered_index = models.IntegerField(default=None, null=True) # order within team
 

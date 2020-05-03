@@ -48,20 +48,21 @@ def ChooseHatter(salle_id):
     for team in team_set:
         # assign team order
         team.ordered_index = team_index
+        if team_index == 0:
+            team.hatter = True
         team.save()
         # assign player order
         player_index=0
         player_set = team.jouer_set.all()
         for player in player_set:
             player.ordered_index = player_index
-            if team_index==0 and player_index==0:
-                # assign hatter
-                player.hatter=1
-                hatter = player
+            if player_index==0:
+                # assign player hatter
+                player.hatter = True
             player.save()
             player_index+=1
         team_index+=1
-    return hatter
+    #return team_set[0].player_set[0] # return first team's hatter
 
 #################################################
 # Actions to be performed within one round of the game.
@@ -168,30 +169,11 @@ def GetScoreboard(salle_id):
 def GetOrderedPlayers(salle_id):
     return Jouer.objects.filter(salle=Salle(id=salle_id)).order_by('order_index')
 
-# TODO: update
+# return Player
 def UpdateHatter(salle_id):
-    return
-    # player_set = GetOrderedPlayers(salle_id)
-    # if not player_set.exists():
-    #     print("No players")
-    #
-    # old_hatter_set = player_set.filter(hatter=True)
-    # if old_hatter_set.exists() and old_hatter_set[0].order_index is not None:
-    #   old_hatter = old_hatter_set[0]
-    #   old_index = list(player_set).index(old_hatter)
-    #
-    #   # Clear old hatter
-    #   old_hatter.hatter=False
-    #   old_hatter.save()
-    #
-    #   # Set new hatter
-    #   new_index = (old_index+1)%len(player_set)
-    #   player_set[new_index].hatter=True
-    #   player_set[new_index].save()
-    #
-    # else:
-    #     print("No order/hatter. Assigning new player order and hatter.")
-    #     ChooseHatter(salle_id)
+    curr_hatter = Jouer.objects.filter(equipe__salle=Salle(id=salle_id), hatter=True)
+    curr_team = curr_hatter.equipe
+
 
 #################################################
 # Actions to be performed between games.
