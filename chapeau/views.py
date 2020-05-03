@@ -36,9 +36,7 @@ def StartGameView(request, room_id, player_id):
     if request.method == "POST":
         form = StartGameForm(request.POST)
         if form.is_valid():
-            ChooseHatter(room_id)
-            # TODO: remove IsHatter
-            if IsHatter(room_id, player_id):
+            if player_id == ChooseHatter(room_id):
                 return redirect('hatter_preview', room_id=room_id, player_id=player_id)
             else:
                 return redirect('guesser', room_id=room_id, player_id=player_id)
@@ -84,7 +82,7 @@ def RoundResultsView(request, room_id, player_id):
             FlushRound(room_id)
             UpdateHatter(room_id)
             # TODO: remove IsHatter
-            if IsHatter(room_id, player_id):
+            if player_id == UpdateHatter(room_id):
                 return redirect('hatter_round', room_id=room_id, player_id=player_id)
             else:
                 return redirect('guesser', room_id=room_id, player_id=player_id)

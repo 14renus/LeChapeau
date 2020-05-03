@@ -53,18 +53,18 @@ def ChooseHatter(salle_id):
             team.hatter = True
         team.save()
         # assign player order
-        player_index=0
+        player_index = 0
         player_set = team.jouer_set.all()
         for player in player_set:
             player.ordered_index = player_index
-            if player_index==0:
+            if player_index == 0:
                 # assign player hatter
                 player.hatter = True
-                if team_index==0:
+                if team_index == 0:
                     hatter_name = player.nom
             player.save()
-            player_index+=1
-        team_index+=1
+            player_index += 1
+        team_index += 1
     return hatter_name
 
 #################################################
@@ -179,13 +179,13 @@ def UpdateHatter(salle_id):
     if not curr_team_set.exists():
         print("no current hatter team.")
         return ChooseHatter(salle_id)
-    curr_team=curr_team_set[0]
+    curr_team = curr_team_set[0]
     player_set = curr_team.jouer_set.all()
     curr_hatter_set = player_set.filter(hatter=True)
-    if not  curr_hatter_set.exists():
+    if not curr_hatter_set.exists():
         print("no current hatter player.")
         return ChooseHatter(salle_id)
-    curr_hatter=curr_hatter_set[0]
+    curr_hatter = curr_hatter_set[0]
 
     # update player hatter in O(1)
     curr_hatter_index = curr_hatter.ordered_index
