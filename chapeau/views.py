@@ -124,7 +124,9 @@ def RoundResultsView(request, room_id, player_id, game_round):
 def EndGameView(request, room_id):
     if not Salle.objects.filter(id=room_id).exists():
         return redirect('create_room')
+    teams, _ = GetLeaderBoardAndHatter(room_id)
+    winner_team = teams[0]
     FlushGame(room_id)
-    return render(request, 'game_over.html', {})
+    return render(request, 'game_over.html', {"leaderboard" : teams, "winner_team" : winner_team})
 
 

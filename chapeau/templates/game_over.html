@@ -1,4 +1,42 @@
 {% extends 'index.html' %}
 {% block content %}
     <h1 class="text-center">Game over!</h1>
+    {% if winner_team %}
+        <hr>
+        <h2 class="text-center">{{ winner_team.nom }} a gagné!</h2>
+    {% endif %}
+    {% if leaderboard %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>
+                        Équipe
+                    </th>
+                    <th>
+                        Hatter
+                    </th>
+                    <th>
+                        Score
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for team in leaderboard %}
+                <tr class="table-default">
+                    <td>
+                       {{ team.nom }}
+                    </td>
+                    <td>
+                        {% if team.hatter %}
+                            {{ hatter }}
+                        {% endif %}
+                    </td>
+                    <td>
+                       {{ team.score }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 {% endblock %}
