@@ -1,7 +1,7 @@
 {% extends 'index.html' %}
 {% block content %}
     <h2>Vous êtes hatter!</h2>
-    <p>Ton but est d'éxpliquer le plus mots possible. Clique Lancer quand tu es prét.</p>
+    <p>Votre but est d'éxpliquer le plus mots possible. Cliquez Lancer quand vous êtes prêt(e).</p>
     <form action="" method="post">{% csrf_token %}
         <input type="submit" class="save btn btn-primary btn-large" name = "ready" value="Lancer">
     </form>

@@ -1,10 +1,10 @@
 {% extends 'index.html' %}
 {% block content %}
     <h2>
-        Crée ton équipe et mets tes mots dans le chapeau
+        Créez voter équipe et mettez vos mots dans le chapeau.
     </h2>
     <p>
-        Choisi le nom de ton jouer et ton équipe. Puis ecrits les mots pour cette jeu.
+        Choisissez le nom de votre jouer et de votre équipe. Puis écrivez les mots pour ce jeu.
     </p>
     <form method="POST" class="post-form">{% csrf_token %}
         {{ form.as_p }}
