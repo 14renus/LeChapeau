@@ -23,7 +23,7 @@ class RoundUtilsTest(TestCase):
         Jouer.objects.create(nom='Renu', equipe=violet)
         Jouer.objects.create(nom='May', equipe=violet)
 
-        Jouer.objects.create(nom='Dasha',equipe=rose2)
+        Jouer.objects.create(nom='Dasha', equipe=rose2)
         Jouer.objects.create(nom='Etienne', equipe=violet2)
         # Words
         Mot.objects.create(mot='whale',  salle=pumpkin)
@@ -134,7 +134,7 @@ class RoundUtilsTest(TestCase):
     # Checks hatter is unique per team
     # Checks ordered_index in teams and players are not None
     def test_ChooseHatter(self):
-        chosen_hatter = utils.ChooseHatter(salle_id='pumpkin')
+        chosen_hatter, game_round = utils.ChooseHatter(salle_id='pumpkin', game_round=0)
 
         # team_set = Equipe.objects.filter(salle=Salle(id='pumpkin'))
         #
@@ -161,6 +161,12 @@ class RoundUtilsTest(TestCase):
         # self.assertTrue(found_team_hatter, "No team hatter found.")
         # self.assertTrue(hatter_name==chosen_hatter)
         self.assertEquals(chosen_hatter, 'Dasha')
+        self.assertEquals(game_round, 1)
+
+        # If the hatter was already chosen, no changes will be applied
+        new_hatter, game_round = utils.ChooseHatter(salle_id='pumpkin', game_round=0)
+        self.assertEquals(new_hatter, 'Dasha')
+        self.assertEquals(game_round, 1)
 
         # Team hatter and order is set
         rose = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='rose')
@@ -187,12 +193,15 @@ class RoundUtilsTest(TestCase):
 
     def test_UpdateHatter(self):
         #### 1. set order and first hatter
-        utils.ChooseHatter(salle_id='pumpkin')
+        first_hatter, game_round = utils.ChooseHatter(salle_id='pumpkin', game_round=0)
+        self.assertEquals(first_hatter, 'Dasha')
+        self.assertEquals(game_round, 1)
 
         #### 2. Next hatter = Renu in Violet
-        chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
+        chosen_hatter, game_round = utils.UpdateHatter(salle_id='pumpkin', game_round=1)
         # Correct hatter
         self.assertEquals(chosen_hatter, 'Renu')
+        self.assertEquals(game_round, 2)
         # Update team
         rose = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='rose')
         violet = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='violet')
@@ -205,7 +214,10 @@ class RoundUtilsTest(TestCase):
         self.assertTrue(diego.hatter)
 
         #### 2. Next hatter = Diego in Rose
-        chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
+        chosen_hatter, game_round = utils.UpdateHatter(salle_id='pumpkin', game_round=2)
+        # Correct hatter
+        self.assertEquals(chosen_hatter, 'Diego')
+        self.assertEquals(game_round, 3)
         # Update team
         rose = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='rose')
         violet = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='violet')
@@ -216,16 +228,22 @@ class RoundUtilsTest(TestCase):
         may = Jouer.objects.get(nom='May', equipe=violet)
         self.assertFalse(renu.hatter)
         self.assertTrue(may.hatter)
-        # Correct hatter
-        self.assertEquals(chosen_hatter, 'Diego')
+
 
         #### 3. Next hatter = May in Violet
-        chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
+        chosen_hatter, game_round = utils.UpdateHatter(salle_id='pumpkin', game_round=3)
         self.assertEquals(chosen_hatter, 'May')
+        self.assertEquals(game_round, 4)
 
         #### 4. Next hatter = Dasha in Rose
-        chosen_hatter = utils.UpdateHatter(salle_id='pumpkin')
+        chosen_hatter, game_round = utils.UpdateHatter(salle_id='pumpkin', game_round=4)
         self.assertEquals(chosen_hatter, 'Dasha')
+        self.assertEquals(game_round, 5)
+
+        #### 5. Hatter was already updated to Dasha, no changes
+        chosen_hatter, game_round = utils.UpdateHatter(salle_id='pumpkin', game_round=4)
+        self.assertEquals(chosen_hatter, 'Dasha')
+        self.assertEquals(game_round, 5)
 
 
 

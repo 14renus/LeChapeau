@@ -2,6 +2,7 @@ from .models import Salle
 from .models import Mot
 from .models import Jouer
 from .models import Equipe
+from django.db import transaction
 
 import random
 
@@ -40,36 +41,66 @@ def AddPlayer(salle_id, player_nom, equipe_nom=None):
     player.save()
     return player
 
+# Return str : hatter name, int : current game round
+# Raises an exception if the player_game_round is bigger than the global game round.
+def GetHatter(salle, player_game_round):
+    if (salle.tour > player_game_round):
+        # Hatter was already chosen, prompted by another player
+        hatter_team = salle.equipe_set.get(hatter=True)
+        hatter_player = hatter_team.jouer_set.get(hatter=True)
+        return hatter_player.nom, salle.tour
+    if (salle.tour < player_game_round):
+        raise Exception("Something is wrong here: player's game round can't be bigger than game room's round.")
+    return None
+
 # Choose hatter and assigned ordered indices for teams and players.
-# Return str : hatter name
-def ChooseHatter(salle_id):
-    hatter_name = None
-    team_index = 0
-    team_set = GetTeams(salle_id)
-    for team in team_set:
-        # assign team order
-        team.ordered_index = team_index
-        if team_index == 0:
-            team.hatter = True
-        team.save()
-        # assign player order
-        player_index = 0
-        player_set = team.jouer_set.all()
-        for player in player_set:
-            player.ordered_index = player_index
-            if player_index == 0:
-                # assign player hatter
-                player.hatter = True
-                if team_index == 0:
-                    hatter_name = player.nom
-            player.save()
-            player_index += 1
-        team_index += 1
-    return hatter_name
+# Return str : hatter name, int : game round (Should always return 1)
+def ChooseHatter(salle_id, game_round):
+    with transaction.atomic():
+        salle = Salle.objects.select_for_update().get(id=salle_id)
+        hatter = GetHatter(salle, game_round)
+        if hatter:
+            return hatter
+
+        # Is salle.tour == game_round, it means that this player is the first who started the game and the hatter was
+        # not chosen yet.
+        # If hatter was not chosen, assign order, choose one hatter from each team and choose the first hatter team.
+        # The first hatter player is a hatter from the hatter team.
+        hatter_name = None
+        team_index = 0
+        team_set = salle.equipe_set.all()
+        for team in team_set:
+            # assign team order
+            team.ordered_index = team_index
+            if team_index == 0:
+                team.hatter = True
+            team.save()
+            # assign player order
+            player_index = 0
+            player_set = team.jouer_set.all()
+            for player in player_set:
+                player.ordered_index = player_index
+                if player_index == 0:
+                    # assign player hatter
+                    player.hatter = True
+                    if team_index == 0:
+                        hatter_name = player.nom
+                player.save()
+                player_index += 1
+            team_index += 1
+        # Increment game round
+        salle.tour += 1
+        salle.save()
+    return hatter_name, salle.tour
 
 #################################################
 # Actions to be performed within one round of the game.
 ##################################################
+
+def GetNextGameRound(salle_id, previous_game_round):
+    # If the round was not yet updated, it'll be incremented.
+    Salle.objects.filter(id=salle_id, tour=previous_game_round).update(tour=previous_game_round + 1)
+    return Salle.objects.get(id=salle_id).tour
 
 def IsHatter(salle_id, player_id):
     return Jouer.objects.get(salle=Salle(id=salle_id), nom=player_id).hatter
@@ -172,40 +203,49 @@ def GetScoreboard(salle_id):
 def GetOrderedPlayers(salle_id):
     return Jouer.objects.filter(salle=Salle(id=salle_id)).order_by('order_index')
 
-# return set : Player name
-def UpdateHatter(salle_id):
-    team_set = GetTeams(salle_id).order_by('ordered_index')
-    curr_team_set = team_set.filter(hatter=True)
-    if not curr_team_set.exists():
-        raise Exception("Hatter team not set. Did you call ChooseHatter?")
-    curr_team=curr_team_set[0]
-    player_set = curr_team.jouer_set.order_by('ordered_index')
-    curr_hatter_set = player_set.filter(hatter=True)
-    if not curr_hatter_set.exists():
-        raise Exception("Hatter team set but not player hatter.")
-    curr_hatter=curr_hatter_set[0]
+# return str : Player name, int : next game round
+def UpdateHatter(salle_id, game_round):
+    with transaction.atomic():
+        salle = Salle.objects.select_for_update().get(id=salle_id)
+        # If hatter was already updated, return it
+        hatter = GetHatter(salle, game_round)
+        if hatter:
+            return hatter
 
-    # update player hatter in O(1)
-    curr_hatter_index = curr_hatter.ordered_index
-    new_hatter_index = (curr_hatter_index+1) % len(player_set)
-    player_set[curr_hatter_index].hatter=False
-    player_set[curr_hatter_index].save()
-    player_set[new_hatter_index].hatter=True
-    player_set[new_hatter_index].save()
+        team_set = salle.equipe_set.all().order_by('ordered_index')
+        curr_team_set = team_set.filter(hatter=True)
+        if not curr_team_set.exists():
+            raise Exception("Hatter team not set. Did you call ChooseHatter?")
+        curr_team = curr_team_set[0]
+        player_set = curr_team.jouer_set.order_by('ordered_index')
+        curr_hatter_set = player_set.filter(hatter=True)
+        if not curr_hatter_set.exists():
+            raise Exception("Hatter team set but not player hatter.")
+        curr_hatter = curr_hatter_set[0]
 
-    # update team hatter in O(1)
-    curr_team_index = curr_team.ordered_index
-    new_team_index = (curr_team_index+1) % len(team_set)
-    team_set[curr_team_index].hatter=False
-    team_set[curr_team_index].save()
-    team_set[new_team_index].hatter=True
-    team_set[new_team_index].save()
+        # update player hatter in O(1)
+        curr_hatter_index = curr_hatter.ordered_index
+        new_hatter_index = (curr_hatter_index+1) % len(player_set)
+        player_set[curr_hatter_index].hatter = False
+        player_set[curr_hatter_index].save()
+        player_set[new_hatter_index].hatter = True
+        player_set[new_hatter_index].save()
 
-    curr_hatter_set = team_set[new_team_index].jouer_set.filter(hatter=True)
-    if curr_hatter_set.exists():
-        return curr_hatter_set[0].nom
-    else:
-        raise Exception("No hatter is set.")
+        # update team hatter in O(1)
+        curr_team_index = curr_team.ordered_index
+        new_team_index = (curr_team_index+1) % len(team_set)
+        team_set[curr_team_index].hatter = False
+        team_set[curr_team_index].save()
+        team_set[new_team_index].hatter = True
+        team_set[new_team_index].save()
+
+        curr_hatter_set = team_set[new_team_index].jouer_set.filter(hatter=True)
+        if curr_hatter_set.exists():
+            salle.tour += 1
+            salle.save()
+            return curr_hatter_set[0].nom, salle.tour
+        else:
+            raise Exception("No hatter is set.")
 
 
 #################################################

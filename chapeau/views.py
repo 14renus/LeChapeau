@@ -36,38 +36,39 @@ def StartGameView(request, room_id, player_id):
     if request.method == "POST":
         form = StartGameForm(request.POST)
         if form.is_valid():
-            if player_id == ChooseHatter(room_id):
-                return redirect('hatter_preview', room_id=room_id, player_id=player_id)
+            hatter_id, game_round = ChooseHatter(room_id, 0)
+            if player_id == hatter_id:
+                return redirect('hatter_preview', room_id=room_id, player_id=player_id, game_round=game_round)
             else:
-                return redirect('guesser', room_id=room_id, player_id=player_id)
+                return redirect('guesser', room_id=room_id, player_id=player_id, game_round=game_round)
     # Assign order, choose Hatter
     return render(request, 'start_game.html', {})
 
-def GuesserPreview(request, room_id, player_id):
+def GuesserPreview(request, room_id, player_id, game_round):
     if request.method == "POST":
         if 'next_turn' in request.POST:
-            return redirect('round_results', room_id=room_id, player_id=player_id)
+            return redirect('round_results', room_id=room_id, player_id=player_id, game_round=game_round)
         if 'game_over' in request.POST:
             return redirect('game_over', room_id=room_id, player_id=player_id)
     return render(request, 'guesser.html', {})
 
-def HatterPreview(request, room_id, player_id):
+def HatterPreview(request, room_id, player_id, game_round):
     if request.method == "POST":
         if 'ready' in request.POST:
-            return redirect('hatter_round', room_id=room_id, player_id=player_id)
+            return redirect('hatter_round', room_id=room_id, player_id=player_id, game_round=game_round)
     return render(request, 'hatter_preview.html', {})
 
-def HatterView(request, room_id, player_id):
+def HatterView(request, room_id, player_id, game_round):
     if request.method == "POST":
         if 'next_word' in request.POST:
-            return redirect('hatter_round', room_id=room_id, player_id=player_id)
+            return redirect('hatter_round', room_id=room_id, player_id=player_id, game_round=game_round)
         if 'skip_word' in request.POST:
             word = request.POST['word']
             if word != "None":
                 PassWord(room_id, request.POST['word'])
-            return redirect('hatter_round', room_id=room_id, player_id=player_id)
+            return redirect('hatter_round', room_id=room_id, player_id=player_id, game_round=game_round)
         if 'next_turn' in request.POST:
-            return redirect('round_results', room_id=room_id, player_id=player_id)
+            return redirect('round_results', room_id=room_id, player_id=player_id, game_round=game_round)
         if 'game_over' in request.POST:
             return redirect('game_over', room_id=room_id, player_id=player_id)
     word = ChooseRandomFreeWord(room_id)
@@ -76,14 +77,15 @@ def HatterView(request, room_id, player_id):
         error = "Il n'y a plus de mots :("
     return render(request, 'hatter_round.html', {"word": word, "error": error})
 
-def RoundResultsView(request, room_id, player_id):
+def RoundResultsView(request, room_id, player_id, game_round):
     if request.method == "POST":
         if 'next_turn' in request.POST:
             FlushRound(room_id)
-            if player_id == UpdateHatter(room_id):
-                return redirect('hatter_round', room_id=room_id, player_id=player_id)
+            new_hatter, next_round = UpdateHatter(room_id, game_round)
+            if player_id == new_hatter:
+                return redirect('hatter_preview', room_id=room_id, player_id=player_id, game_round=next_round)
             else:
-                return redirect('guesser', room_id=room_id, player_id=player_id)
+                return redirect('guesser', room_id=room_id, player_id=player_id, game_round=next_round)
         if 'game_over' in request.POST:
             return redirect('game_over', room_id=room_id, player_id=player_id)
     # TODO: display the words from the finished round in the template

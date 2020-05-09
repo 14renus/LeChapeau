@@ -9,9 +9,10 @@ class Salle(models.Model):
     EQUIPE="Equipe"
     GAME_MODE_CHOICES = (
         (PARTICULIER, "Chaque jouer joue pour lui-meme."),
-        (PARTICULIER, "Les jouers son dividé en équipes."),
+        (EQUIPE, "Les jouers son dividé en équipes."),
     )
     mode = models.CharField("Nom de la salle", max_length=256, choices=GAME_MODE_CHOICES, default='Equipe')
+    tour = models.IntegerField("Tour de la jeu. Chaque tour le hatter change.", default=0)
 
 class  Mot(models.Model):
     mot = models.CharField("Mot", max_length=256, default="")
