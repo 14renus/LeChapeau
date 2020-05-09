@@ -1,10 +1,51 @@
 {% extends 'index.html' %}
 {% block content %}
     <h2>Résultats de le tour</h2>
-    <p>Les mots dévinés</p>
-    {% for word in words %}
-    <p> {{ word }} </p>
-    {% endfor %}
+    <hr>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>
+                    Mot
+                </th>
+                <th>
+                    Déviné
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for word in words %}
+            {% if word.passe %}
+            <tr class="table-danger">
+                <td>
+                   {{ word.mot }}
+                </td>
+                <td>
+                    :(
+                </td>
+            </tr>
+            {% elif word.devine %}
+            <tr class="table-success">
+                <td>
+                    {{ word.mot }}
+                </td>
+                <td>
+                    (:
+                </td>
+            </tr>
+            {% else %}
+            <tr class="table-default">
+                <td>
+                    {{ word.mot }}
+                </td>
+                <td>
+                    :(
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
     <hr>
     <form action="" method="post">{% csrf_token %}
         <div class="row">

@@ -22,16 +22,50 @@
 				CHAPEAU
 			</h3>
 			<div class="row">
-				<div class="col-md-2">
+				<div class="col-md-4">
 				</div>
-				<div class="col-md-8">
+				<div class="col-md-4">
 					<div class="jumbotron">
 					    {% block content %}
                         {% endblock %}
 					</div>
 				</div>
-				<div class="col-md-2">
+				<div class="col-md-4">
+                    {% if teams %}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Équipe
+                                </th>
+                                <th>
+                                    Hatter
+                                </th>
+                                <th>
+                                    Score
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for team in teams %}
+                            <tr class="table-default">
+                                <td>
+                                   {{ team.nom }}
+                                </td>
+                                <td>
+                                    {% if team.hatter %}
+                                        {{ hatter }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                   {{ team.score }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
 				</div>
+                {% endif %}
 			</div>
 		</div>
 	</div>

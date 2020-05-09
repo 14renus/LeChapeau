@@ -22,6 +22,7 @@ class  Mot(models.Model):
     # specifique a un tour
     # si un mot est dans un tour, le mot peut etre passé (passe=True) ou deviné (passe=False))
     passe = models.BooleanField("Est-ce que le mot est passé?", default=False)
+    devine = models.BooleanField("Est-ce que le mot était déviné?", default=False)
     tour = models.BooleanField("Currently in tour", default=False)
 
     # unique constraint
@@ -47,7 +48,7 @@ class Equipe(models.Model):
 
 class Jouer(models.Model):
     nom = models.CharField("Nom de le jouer", max_length=256, blank=False)
-    #salle = models.ForeignKey(Salle, on_delete=models.CASCADE)  # Salle-Jouer is one-to-many.
+    salle = models.ForeignKey(Salle, on_delete=models.CASCADE, db_index=True)  # Salle-Jouer is one-to-many.
     equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, db_index=True)  # Equipe-Jouer is one-to-many.
     hatter = models.BooleanField("Etat de  le jouer (hatter/guesser)", default=False)
 
@@ -57,5 +58,5 @@ class Jouer(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['ordered_index', 'equipe'], name='unique player order in team'),
-            #models.UniqueConstraint(fields=['nom', 'equipe__salle'], name='unique player name in game room'),
+            models.UniqueConstraint(fields=['nom', 'salle'], name='unique player name in the game room'),
         ]

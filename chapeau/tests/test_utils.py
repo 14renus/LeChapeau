@@ -18,13 +18,13 @@ class RoundUtilsTest(TestCase):
         rose2 = Equipe.objects.create(nom='rose', salle=courgette)
         violet2 = Equipe.objects.create(nom='violet', salle=courgette)
         # Players
-        Jouer.objects.create(nom='Dasha', equipe=rose)
-        Jouer.objects.create(nom='Diego', equipe=rose)
-        Jouer.objects.create(nom='Renu', equipe=violet)
-        Jouer.objects.create(nom='May', equipe=violet)
+        Jouer.objects.create(nom='Dasha', equipe=rose, salle=pumpkin)
+        Jouer.objects.create(nom='Diego', equipe=rose, salle=pumpkin)
+        Jouer.objects.create(nom='Renu', equipe=violet, salle=pumpkin)
+        Jouer.objects.create(nom='May', equipe=violet, salle=pumpkin)
 
-        Jouer.objects.create(nom='Dasha', equipe=rose2)
-        Jouer.objects.create(nom='Etienne', equipe=violet2)
+        Jouer.objects.create(nom='Dasha', equipe=rose2, salle=courgette)
+        Jouer.objects.create(nom='Etienne', equipe=violet2, salle=courgette)
         # Words
         Mot.objects.create(mot='whale',  salle=pumpkin)
         Mot.objects.create(mot='pig', salle=pumpkin)
@@ -44,12 +44,12 @@ class RoundUtilsTest(TestCase):
     def test_AddWordList(self):
         utils.AddWordList(salle_id='pumpkin', word_list=['camel'])
 
-        mot1 = Mot()
-        mot1.mot = 'whale'
-        mot2 = Mot()
-        mot2.mot = 'pig'
-        mot3 = Mot()
-        mot3.mot = 'camel'
+        # mot1 = Mot()
+        # mot1.mot = 'whale'
+        # mot2 = Mot()
+        # mot2.mot = 'pig'
+        # mot3 = Mot()
+        # mot3.mot = 'camel'
 
         results = self._get_words(Mot.objects.filter(salle=Salle(id='pumpkin')))
         self.assertCountEqual(results, ['whale', 'pig', 'camel'])
@@ -72,11 +72,11 @@ class RoundUtilsTest(TestCase):
         Jouer.objects.get(nom='Dad', equipe=equipe)
 
         # Test equipe_nom!=None
-        utils.AddPlayer(salle_id='courgette', player_nom='Dad', equipe_nom='violet')
+        utils.AddPlayer(salle_id='courgette', player_nom='Mom', equipe_nom='violet')
 
         salle = Salle.objects.get(id='courgette')
         equipe = Equipe.objects.get(nom='violet', salle=salle)
-        Jouer.objects.get(nom='Dad', equipe=equipe)
+        Jouer.objects.get(nom='Mom', equipe=equipe)
 
     def test_GetFreeWords(self):
         results = utils.GetFreeWordsList(salle_id='pumpkin')
@@ -108,15 +108,15 @@ class RoundUtilsTest(TestCase):
         # tour is set to true
         self.assertTrue(mot.tour)
 
-    def test_GetWordsInRound(self):
-        Mot.objects.create(mot='camel', salle=Salle(id='courgette'), tour=True)
-        Mot.objects.create(mot='wolf', salle=Salle(id='courgette'), tour=True)
-        expected = [{'word':'camel', 'passed':False},
-                    {'word':'wolf', 'passed':False}]
-
-        results = utils.GetWordsInRound(salle_id='courgette')
-
-        self.assertCountEqual(results, expected)
+    # def test_GetWordsInRound(self):
+    #     Mot.objects.create(mot='camel', salle=Salle(id='courgette'), tour=True)
+    #     Mot.objects.create(mot='wolf', salle=Salle(id='courgette'), tour=True)
+    #     expected = [{'word':'camel', 'passed':False},
+    #                 {'word':'wolf', 'passed':False}]
+    #
+    #     results = utils.GetWordsInRound(salle_id='courgette')
+    #
+    #     self.assertCountEqual(results, expected)
 
     def test_GetGuessersInRound(self):
         pass
@@ -197,8 +197,10 @@ class RoundUtilsTest(TestCase):
         self.assertEquals(first_hatter, 'Dasha')
         self.assertEquals(game_round, 1)
 
+        salle = Salle.objects.get(id="pumpkin")
+
         #### 2. Next hatter = Renu in Violet
-        chosen_hatter, game_round = utils.UpdateHatter(salle_id='pumpkin', game_round=1)
+        chosen_hatter, game_round = utils.UpdateHatter(salle)
         # Correct hatter
         self.assertEquals(chosen_hatter, 'Renu')
         self.assertEquals(game_round, 2)
@@ -214,11 +216,11 @@ class RoundUtilsTest(TestCase):
         self.assertTrue(diego.hatter)
 
         #### 2. Next hatter = Diego in Rose
-        chosen_hatter, game_round = utils.UpdateHatter(salle_id='pumpkin', game_round=2)
+        chosen_hatter, game_round = utils.UpdateHatter(salle)
         # Correct hatter
         self.assertEquals(chosen_hatter, 'Diego')
         self.assertEquals(game_round, 3)
-        # Update team
+        # Update teame
         rose = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='rose')
         violet = Equipe.objects.get(salle=Salle(id='pumpkin'), nom='violet')
         self.assertTrue(rose.hatter)
@@ -231,20 +233,52 @@ class RoundUtilsTest(TestCase):
 
 
         #### 3. Next hatter = May in Violet
-        chosen_hatter, game_round = utils.UpdateHatter(salle_id='pumpkin', game_round=3)
+        chosen_hatter, game_round = utils.UpdateHatter(salle)
         self.assertEquals(chosen_hatter, 'May')
         self.assertEquals(game_round, 4)
 
         #### 4. Next hatter = Dasha in Rose
-        chosen_hatter, game_round = utils.UpdateHatter(salle_id='pumpkin', game_round=4)
+        chosen_hatter, game_round = utils.UpdateHatter(salle)
         self.assertEquals(chosen_hatter, 'Dasha')
         self.assertEquals(game_round, 5)
 
-        #### 5. Hatter was already updated to Dasha, no changes
-        chosen_hatter, game_round = utils.UpdateHatter(salle_id='pumpkin', game_round=4)
-        self.assertEquals(chosen_hatter, 'Dasha')
-        self.assertEquals(game_round, 5)
 
+    def test_FinishRound(self):
+        pumpkin = Salle.objects.get(id='pumpkin')
+        first_hatter, game_round = utils.ChooseHatter(salle_id='pumpkin', game_round=0)
+        self.assertEquals(first_hatter, 'Dasha')
+        self.assertEquals(game_round, 1)
+
+        #### Finish round 1
+        Mot.objects.create(mot='kangaroo', salle=pumpkin, tour=True, devine=True)
+        Mot.objects.create(mot='otter', salle=pumpkin, tour=True, passe=True)
+        Mot.objects.create(mot='doggy', salle=pumpkin, tour=True, devine=True)
+
+        new_hatter, next_round = utils.UpdateScoreBoardAndHatter("pumpkin", 1)
+        self.assertEquals(next_round, 2)
+        self.assertEquals(new_hatter, 'Renu')
+        # 2 words guessed, 1 word passed -> +1 score to rose
+        self.assertEquals(Equipe.objects.get(salle=Salle(id='pumpkin'), nom='rose').score, 1)
+        self.assertEquals(Equipe.objects.get(salle=Salle(id='pumpkin'), nom='violet').score, 0)
+        utils.FlushRound('pumpkin')
+
+        #### Round 1 was already finished and hatter updated, so no changes here.
+        new_hatter, next_round = utils.UpdateScoreBoardAndHatter("pumpkin", 1)
+        self.assertEquals(next_round, 2)
+        self.assertEquals(new_hatter, 'Renu')
+
+        #### Finish round 2
+        Mot.objects.create(mot='elephant', salle=pumpkin, tour=True, devine=True)
+        Mot.objects.create(mot='panda', salle=pumpkin, tour=True, devine=True)
+        Mot.objects.filter(mot='otter', salle=pumpkin).update(tour=True, devine=True)
+
+        new_hatter, next_round = utils.UpdateScoreBoardAndHatter("pumpkin", 2)
+        self.assertEquals(next_round, 3)
+        self.assertEquals(new_hatter, 'Diego')
+        self.assertEquals(Equipe.objects.get(salle=Salle(id='pumpkin'), nom='rose').score, 1)
+        # 3 words guessed
+        self.assertEquals(Equipe.objects.get(salle=Salle(id='pumpkin'), nom='violet').score, 3)
+        utils.FlushRound('pumpkin')
 
 
 
